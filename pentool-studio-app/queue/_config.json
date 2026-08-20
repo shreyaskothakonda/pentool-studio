@@ -1,0 +1,17 @@
+{
+  "siteId": "0000000000000000000000ex",
+  "siteName": "Example Site",
+  "componentGroup": "Example",
+  "defaultAnchor": "main-wrapper",
+  "defaultPosition": "append",
+  "bridgePort": 8930,
+
+  "mcp": "webflow",
+
+  "visual": {
+    "enabled": true,
+    "baseUrl": "https://example-site.webflow.io",
+    "viewport": [1440, 900],
+    "publishToStaging": true
+  }
+}

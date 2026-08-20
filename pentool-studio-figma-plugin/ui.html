@@ -1,0 +1,1385 @@
+<style>
+  /* Figma ships --figma-color-* to plugin iframes and switches them with the
+     editor theme, so matching the host costs nothing and tracks it for free.
+     Fallbacks keep the panel legible if a value is ever missing. */
+  :root {
+    color-scheme: light dark;
+    --bg:      var(--figma-color-bg, #fff);
+    --bg-2:    var(--figma-color-bg-secondary, #f5f5f5);
+    --bg-hov:  var(--figma-color-bg-hover, rgba(0,0,0,.06));
+    --fg:      var(--figma-color-text, #1a1a1a);
+    --fg-2:    var(--figma-color-text-secondary, #666);
+    --bd:      var(--figma-color-border, #e5e5e5);
+    --bd-2:    var(--figma-color-border-strong, #999);
+    --brand:   var(--figma-color-bg-brand, #0d99ff);
+    --brand-h: var(--figma-color-bg-brand-hover, #0b8ae6);
+    --on-brand:var(--figma-color-text-onbrand, #fff);
+    --ok:      var(--figma-color-text-success, #14ae5c);
+    --warn:    var(--figma-color-text-danger, #f24822);
+    /* Used for both the thumbnail border and its label so the two agree.
+       Chosen to clear WCAG AA on the thumbnail background in both themes. */
+    --edge: #6e6e6e;
+    --wash:    rgba(13, 153, 255, .10);
+    --wash-hi: rgba(13, 153, 255, .18);
+
+    /* Figma's UI sits on a 4px rhythm. This panel had 2, 3, 5, 6, 7, 9, 10, 12
+       and 14px in it, so nothing lined up with anything. One scale, used
+       everywhere, so a gap is a decision rather than an accident. */
+    --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px;
+  }
+  @media (prefers-color-scheme: dark) { :root { --edge: #9a9a9a; } }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; padding: var(--s3);
+    font: 12px/1.45 Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg); color: var(--fg);
+    display: flex; flex-direction: column;
+  }
+  /* The open output panel absorbs the extra space when the window grows. It is
+     the textarea's wrapper now, so the rule has to target the wrapper and let
+     the growth pass through to the textarea inside it. */
+  body > *:not(#outWrap):not(#queueWrap) { flex: none; }
+  /* Capped at a third of the panel: the dump is a receipt to glance at, not the
+     thing you read here. The shelves and the queue get the rest. */
+  #outWrap {
+    flex: 0 0 auto; min-height: 0;
+    display: flex; flex-direction: column;   /* the row above owns the gap */
+  }
+  /* A third of the panel, not a share of whatever is spare — an auto-sized box
+     just sat at its min-height and never grew. */
+  #outWrap > textarea { flex: 0 0 auto; height: 33vh; min-height: 84px; }
+  #outWrap.collapsed { flex: none; }
+  #outWrap.collapsed > textarea, #outWrap.collapsed > .shelf { display: none; }
+
+  .row { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
+  .rule { padding-bottom: var(--s2); border-bottom: 1px solid var(--bd); margin-bottom: var(--s2); }
+  .hint { color: var(--fg-2); font-size: 11px; }
+  .grow { flex: 1; }
+  .right { margin-left: auto; }
+  .actions-row { margin-bottom: var(--s2); }
+
+  /* ── title ── */
+  #title { gap: var(--s1); align-items: baseline; padding-bottom: var(--s1); }
+  #title b { font-size: 12px; font-weight: 600; }
+  #title .sub { font-size: 11px; color: var(--fg-2); }
+  #title .sub::before { content: '·'; margin-right: var(--s1); }
+
+  /* ── connection bar ── */
+  #conn { gap: var(--s2); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-2); flex: none; }
+  .dot.on   { background: var(--ok); }
+  .dot.off  { background: var(--warn); }
+  .dot.wait { background: var(--brand); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  #connText { font-size: 11px; }
+  #connText b { font-weight: 600; }
+
+  /* ── segmented mode switch ── */
+  .seg { display: inline-flex; border: 1px solid var(--bd); border-radius: 6px; overflow: hidden; }
+  .seg button {
+    font: inherit; font-size: 11px; font-weight: 500; padding: var(--s1) var(--s3);
+    border: none; background: transparent; color: var(--fg-2); cursor: pointer;
+  }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: var(--on-brand); }
+  .seg button:not([aria-pressed="true"]):hover { background: var(--bg-hov); color: var(--fg); }
+
+  /* ── mode legend ── */
+  /* margin-top only: a blanket `margin: 0` here silently cancelled the
+     margin-bottom that .rule sets, and the divider ended up flush. */
+  .modehelp { margin-top: 0; display: grid; gap: var(--s1); }
+  .modehelp > div { display: flex; gap: var(--s2); align-items: baseline; opacity: .45; }
+  .modehelp > div.on { opacity: 1; }
+  .modehelp dt { font-size: 11px; font-weight: 600; min-width: 62px; flex: none; }
+  .modehelp dd { margin: 0; font-size: 11px; color: var(--fg-2); }
+  .modehelp > div.on dd { color: var(--fg); }
+
+  .notes {
+    resize: vertical; min-height: 40px; max-height: 140px;
+    font: inherit; line-height: 1.45; white-space: pre-wrap;
+  }
+
+  /* ── searchable select ──
+     A native <select> is fine for five options and miserable for two hundred, and
+     a Figma file can easily hold that many frames. The <select> stays in the DOM
+     as the value store so everything reading .value keeps working; this is a
+     filter over it, not a replacement for it. */
+  .combo { position: relative; min-width: 0; }
+  .combo > select { display: none; }
+  .combo input {
+    width: 100%; cursor: pointer;
+  }
+  .combo input::placeholder { color: var(--fg-2); opacity: .8; }
+  .combo-list {
+    position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 2px);
+    margin: 0; padding: var(--s1); list-style: none;
+    max-height: 180px; overflow-y: auto;
+    background: var(--bg); border: 1px solid var(--bd); border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.28);
+  }
+  .combo-list[hidden] { display: none; }
+  .combo-list li {
+    padding: var(--s1) var(--s2); border-radius: 4px; cursor: pointer;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .combo-list li[aria-selected="true"] { color: var(--accent); }
+  .combo-list li.active { background: var(--wash); }
+  .combo-empty { padding: var(--s1) var(--s2); color: var(--fg-2); }
+
+  /* ── pickers ── */
+  .pick {
+    display: grid; grid-template-columns: auto 1fr 1fr;
+    gap: var(--s2); align-items: center; margin-bottom: var(--s2);
+  }
+  .pick .lbl { font-size: 11px; color: var(--fg-2); }
+  select, .txt {
+    font: inherit; padding: var(--s1) var(--s2); border-radius: 5px; min-width: 0; width: 100%;
+    border: 1px solid var(--bd); background: var(--bg); color: inherit;
+  }
+  select:disabled { opacity: .5; }
+  .modes { grid-column: 2 / -1; display: flex; gap: var(--s4); flex-wrap: wrap; }
+  .modes label { font-size: 11px; }
+
+  label { display: flex; gap: var(--s1); align-items: center; cursor: pointer; white-space: nowrap; }
+
+  button {
+    font: inherit; font-weight: 600; padding: var(--s2) var(--s3); border-radius: 6px;
+    border: none; background: var(--brand); color: var(--on-brand); cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease,
+                color .12s ease, transform .06s ease;
+  }
+  /* :not(:disabled) so a disabled Copy or a mid-run Capture stays inert. */
+  button:hover:not(:disabled) { background: var(--brand-h); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button:disabled { opacity: .5; cursor: default; }
+
+  button.secondary { background: transparent; color: inherit; border: 1px solid var(--bd-2); }
+  button.secondary:hover:not(:disabled) {
+    background: var(--wash); border-color: var(--brand); color: var(--brand);
+  }
+  button.secondary:active:not(:disabled) { background: var(--wash-hi); }
+  button.link {
+    background: none; border: none; color: var(--fg-2); text-decoration: underline;
+    font-weight: 400; font-size: 11px; padding: 0 var(--s1);
+  }
+  button.link:hover:not(:disabled) { color: var(--fg); background: none; }
+  button.sm { font-size: 11px; padding: var(--s1) var(--s2); }
+
+  textarea {
+    width: 100%; min-height: 84px; resize: none;
+    font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--bg-2); color: var(--fg);
+    border: 1px solid var(--bd); border-radius: 6px; padding: var(--s2); white-space: pre;
+  }
+  .status { font-size: 11px; color: var(--fg-2); margin-left: auto; text-align: right; }
+  .spinner {
+    width: 13px; height: 13px; flex: none; border-radius: 50%;
+    border: 2px solid var(--bd); border-top-color: var(--brand);
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    /* Slowed rather than stopped — a frozen indicator reads as a hang. */
+    .spinner { animation-duration: 2.4s; }
+    .dot.wait { animation-duration: 3s; }
+    button { transition: none; }
+    button:active:not(:disabled) { transform: none; }
+  }
+  body.busy textarea { opacity: .5; }
+
+  .shelf { display: flex; gap: var(--s2); flex-wrap: wrap; margin-top: var(--s2); max-height: 140px; overflow-y: auto; }
+  .thumb {
+    border: 1px solid var(--bd); border-radius: 6px; padding: var(--s1);
+    width: 108px; text-align: center; background: var(--bg-2);
+  }
+  .thumb img { width: 100%; height: 62px; object-fit: contain; display: block; }
+  .thumb span {
+    display: block; font-size: 9px; color: var(--edge); margin: var(--s1) 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .acts { display: flex; gap: var(--s1); }
+  .acts button {
+    flex: 1; font: inherit; font-size: 10px; font-weight: 500; padding: var(--s1) 0;
+    border-radius: 4px; border: 1px solid var(--edge);
+    background: transparent; color: var(--edge); cursor: pointer;
+  }
+  .acts button:hover:not(:disabled) {
+    background: var(--wash); border-color: var(--brand); color: var(--brand);
+  }
+  details { margin-top: var(--s2); }
+  .disc, details > summary {
+    cursor: pointer; font-size: 11px; color: var(--fg-2); padding: var(--s1) 0;
+    list-style: none; display: flex; gap: var(--s2); align-items: center;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  .disc { background: none; border: none; font-weight: 400; text-align: left; }
+  .disc::before, details > summary::before {
+    content: '▸'; font-size: 9px; transition: transform .12s ease; display: inline-block;
+  }
+  .disc[aria-expanded="true"]::before, details[open] > summary::before { transform: rotate(90deg); }
+  .disc:hover, details > summary:hover { color: var(--fg); background: none; }
+  details > summary .right { font-weight: 400; }
+  @media (prefers-reduced-motion: reduce) {
+    .disc::before, details > summary::before { transition: none; }
+  }
+
+  /* ── queue ── */
+  #queueWrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #queueBody { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+  .qpage { font-size: 11px; font-weight: 600; margin: var(--s2) 0 var(--s1); }
+  .qrow {
+    display: flex; gap: var(--s2); align-items: baseline; font-size: 11px;
+    padding: var(--s1) var(--s2); border-radius: 4px;
+  }
+  .qrow:hover { background: var(--bg-hov); }
+  .qrow .n { color: var(--fg-2); min-width: 14px; text-align: center; }
+  .qrow .n.st-done     { color: var(--ok); }
+  .qrow .n.st-building { color: var(--brand); }
+  .qrow .n.st-blocked  { color: var(--warn); font-weight: 700; }
+  .qrow.is-done .nm { color: var(--fg-2); text-decoration: line-through; }
+  .qrow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .qrow .meta { color: var(--fg-2); font-size: 10px; }
+  .qempty { font-size: 11px; color: var(--fg-2); padding: var(--s2); }
+  .qprob { display: flex; gap: var(--s2); font-size: 10px; padding: var(--s1) var(--s2); line-height: 1.4; }
+  .qprob .mark { flex: none; font-weight: 700; }
+  .qprob.error .mark { color: var(--warn); }
+  .qprob.warn  .mark { color: var(--fg-2); }
+  .qprob .what { color: var(--fg-2); }
+  .qsub { font-size: 10px; color: var(--fg-2); margin: var(--s3) 0 var(--s1); text-transform: uppercase;
+          letter-spacing: .04em; }
+
+  .note { font-size: 11px; color: var(--fg-2); margin-top: var(--s2); line-height: 1.5; }
+  .note code {
+    display: block; margin-top: var(--s1); font-size: 10px; opacity: .8;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-word;
+  }
+
+  /* Figma plugin windows are not natively resizable — the plugin has to drive
+     figma.ui.resize() itself, so this grip is the only way to grow the panel. */
+  #corner {
+    position: fixed; right: 0; bottom: 0; width: 16px; height: 16px;
+    cursor: nwse-resize; color: var(--edge); touch-action: none;
+  }
+  #corner svg { display: block; }
+  [hidden] { display: none !important; }
+</style>
+
+<div class="row" id="title">
+  <b>Pentool Studio</b><span class="sub">Figma to Webflow</span>
+</div>
+
+<div class="row rule" id="conn">
+  <span class="dot" id="connDot"></span>
+  <span id="connText">Looking for the Pentool Studio App…</span>
+  <span class="right"></span>
+  <button id="connect" class="sm" hidden>Connect this file</button>
+  <button id="retry" class="link" hidden>Retry</button>
+  <button id="fetchWf" class="link" hidden
+    title="Pull this site's pages and components from Webflow">Fetch from Webflow</button>
+  <button id="disconnect" class="link" hidden>Disconnect</button>
+</div>
+
+<div class="row rule">
+  <span class="seg">
+    <button id="modeManual" aria-pressed="true">Manual</button>
+    <button id="modeCopy" aria-pressed="false">Just copy</button>
+    <button id="modeAuto" aria-pressed="false">Auto</button>
+  </span>
+  <span class="right hint">root is</span>
+  <select id="rootRole" style="width:auto">
+    <option value="auto">auto-detect</option>
+    <option value="section">section</option>
+    <option value="layout">layout</option>
+    <option value="component">component</option>
+    <option value="element">element</option>
+  </select>
+</div>
+
+<dl class="modehelp rule" id="modeHelp">
+  <div data-mode="manual" class="on"><dt>Manual</dt><dd>Pick a frame, say what it is, add it to the queue.</dd></div>
+  <div data-mode="copy"><dt>Just copy</dt><dd>Capture and copy the output. Nothing is queued.</dd></div>
+  <div data-mode="auto"><dt>Auto</dt><dd>Capture whatever is selected on the canvas and queue it.</dd></div>
+</dl>
+
+<div class="pick" id="manual">
+  <span class="lbl">Figma</span>
+  <select id="fPage"><option value="">page…</option></select>
+  <select id="fFrame" disabled><option value="">frame…</option></select>
+
+  <span class="lbl">This is a</span>
+  <div class="modes" id="kinds">
+    <label><input type="radio" name="kind" value="section" checked> section</label>
+    <label><input type="radio" name="kind" value="page"> page</label>
+    <label><input type="radio" name="kind" value="component"> new component</label>
+    <label><input type="radio" name="kind" value="update"> update a component</label>
+  </div>
+
+  <span class="lbl" id="notesLbl">Notes</span>
+  <textarea id="notes" class="txt notes" rows="2"
+    placeholder="Anything the builder should know — a variant to use, copy to keep, something the design does not say."
+    style="grid-column:2/-1"></textarea>
+
+  <span class="lbl" id="eachLbl" hidden>Sections</span>
+  <label class="modes" id="eachWrap" hidden style="grid-column:2/-1">
+    <input type="checkbox" id="eachSection">
+    <span>Queue each section inside it separately</span>
+    <span class="hint" id="eachCount"></span>
+  </label>
+
+
+  <span class="lbl" id="compLbl" hidden>Replaces</span>
+  <select id="wComp" disabled hidden><option value="">component…</option></select>
+  <span id="compPad" hidden></span>
+
+  <span class="lbl" id="pageLbl">Page</span>
+  <select id="wPage" disabled><option value="">page…</option></select>
+  <span id="pagePad"></span>
+
+  <span class="lbl" id="newPageLbl" hidden>New page</span>
+  <input type="text" id="pageSlug" class="txt" placeholder="/about" hidden>
+  <input type="text" id="pageTitle" class="txt" placeholder="page title (optional)" hidden>
+</div>
+
+<div class="row actions-row">
+  <button id="run">Add to queue</button>
+  <button id="copy" class="secondary" disabled>Copy</button>
+  <span class="spinner" id="spin" hidden></span>
+  <span class="status" id="status">Pick a frame, then say what it is.</span>
+</div>
+
+<!-- Manual mode sends to the queue, so the dump is a receipt rather than the
+     product — it collapses. Auto mode is the copy-to-chat path, so it stays open. -->
+<!-- Deliberately not <details>: Chromium wraps a details element's non-summary
+     children in an anonymous box, so a flex:1 textarea inside one never grows. -->
+<div id="outWrap" class="collapsed">
+  <button id="outToggle" class="disc" aria-expanded="false" aria-controls="out">Output</button>
+  <textarea id="out" spellcheck="false" placeholder="Output appears here…"></textarea>
+  <div id="svgshelf" class="shelf"></div>
+  <div id="shelf" class="shelf"></div>
+</div>
+
+<details id="queueWrap" open>
+  <summary>
+    Queue<span id="qCount" class="right"></span>
+    <button id="qRefresh" class="link" title="Reload from the project">Refresh</button>
+  </summary>
+  <div id="queueBody"><div class="qempty">Nothing queued yet.</div></div>
+</details>
+<div class="note" id="note" hidden>
+  Nothing is saved automatically — hit <b>Save PNG</b> to download one.
+  <code>Download is the only way out: Figma's plugin iframe is denied
+  clipboard-write, and a drop target needs a real OS file drag that no plugin can
+  synthesize. To put an image on your clipboard, use Figma's own right-click →
+  Copy as PNG on the canvas.</code>
+</div>
+
+<div id="corner" title="Drag to resize">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M15 5L5 15M15 10L10 15" stroke="currentColor" stroke-width="1.5"/>
+  </svg>
+</div>
+
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  // NOT `status`: window.status is a legacy string property, so `var status =
+  // <element>` is coerced to a string and every `.textContent =` on it becomes a
+  // silent no-op. That is why the status line never updated.
+  var out = $('out'), statusEl = $('status'), note = $('note');
+  var shelf = $('shelf'), svgshelf = $('svgshelf');
+  var busy = false;
+
+  // Fixed. The manifest allowlists exactly this origin under devAllowedDomains,
+  // and only one bridge runs at a time, so there has never been anything to type.
+  var BRIDGE = 'http://localhost:8930';
+
+  var conn = { state: 'probing', token: null, project: null, site: null,
+               styleGuide: null, webflow: null };
+  var mode = 'manual';
+  var pages = [], frames = [], wPages = [], wComps = [];
+
+  function send(m) { parent.postMessage({ pluginMessage: m }, '*'); }
+
+  /* ─────────────────────────── connection ─────────────────────────── */
+
+  function paint() {
+    var dot = $('connDot'), txt = $('connText');
+    var s = conn.state;
+    dot.className = 'dot' +
+      (s === 'paired' ? ' on' : s === 'pairing' || s === 'probing' ? ' wait' : ' off');
+
+    // Each state names the half that needs attention and the next action. "Not
+    // connected yet" told you neither.
+    if (s === 'probing') {
+      txt.textContent = 'Looking for the Pentool Studio App…';
+    } else if (s === 'absent') {
+      txt.textContent = 'Pentool Studio App is not running — open it, then retry.';
+    } else if (s === 'found') {
+      txt.textContent = 'Pentool Studio App is running. Connect this file to a project.';
+    } else if (s === 'pairing') {
+      txt.textContent = 'Approve this file in the browser tab that just opened…';
+    } else if (s === 'paired') {
+      txt.innerHTML = 'Captures go to <b></b>';
+      txt.querySelector('b').textContent = conn.project || 'a project';
+    } else if (s === 'stale') {
+      txt.textContent = 'That project is no longer in the Pentool Studio App. Connect again.';
+    }
+
+    $('connect').hidden    = !(s === 'found' || s === 'stale');
+    $('retry').hidden      = !(s === 'absent');
+    $('fetchWf').hidden   = !(s === 'paired');
+    $('disconnect').hidden = !(s === 'paired');
+    refreshManual();
+  }
+
+  async function api(path, opts) {
+    var o = opts || {};
+    var headers = { 'content-type': 'application/json' };
+    if (conn.token) headers['x-pentool-token'] = conn.token;
+    var res = await fetch(BRIDGE + path, {
+      method: o.method || 'GET', headers: headers,
+      body: o.body ? JSON.stringify(o.body) : undefined
+    });
+    var json = await res.json().catch(function () { return {}; });
+    if (!res.ok) { var e = new Error(json.error || ('HTTP ' + res.status)); e.status = res.status; throw e; }
+    return json;
+  }
+
+  async function probe() {
+    conn.state = 'probing'; paint();
+    try { await api('/health'); } catch (e) { conn.state = 'absent'; paint(); return; }
+    if (!conn.token) { conn.state = 'found'; paint(); return; }
+    await hello(true);
+  }
+
+  // Also the heartbeat: the app needs live "plugin open" state, not just a
+  // one-time pairing, so this keeps running on a timer once connected.
+  async function hello(fresh) {
+    try {
+      var r = await api('/hello', {
+        method: 'POST',
+        body: { plugin: 'pentool-studio', version: '2.0', figma: 'desktop' }
+      });
+      conn.state = 'paired';
+      conn.project = r.project;
+      conn.site = r.site || null;
+      conn.styleGuide = r.styleGuide || null;
+      conn.webflow = r.webflow || null;
+      paint();
+      loadWebflow(fresh);
+      if (fresh && mode === 'manual') loadQueue();
+    } catch (e) {
+      // 401 means the token was revoked; 404 means the project it named is gone.
+      conn.state = (e.status === 404) ? 'stale' : (e.status === 401 ? 'found' : 'absent');
+      paint();
+    }
+  }
+
+  $('retry').onclick = probe;
+
+  $('disconnect').onclick = function () {
+    pairGen++;
+    conn.token = null; conn.project = null; conn.site = null;
+    conn.styleGuide = null; conn.webflow = null;
+    send({ type: 'unpair' });
+    probe();
+  };
+
+  // Each Connect starts its own poll loop. Without a generation stamp, clicking
+  // twice left the first loop running against a dead pairId, retrying until its
+  // own timeout and able to overwrite the newer attempt's state.
+  var pairGen = 0;
+
+  $('connect').onclick = async function () {
+    var gen = ++pairGen;
+    conn.state = 'pairing'; paint();
+    var start;
+    try { start = await api('/pair/start', { method: 'POST' }); }
+    catch (e) { conn.state = 'absent'; paint(); return; }
+
+    // openExternal is a main-thread API — the iframe cannot call it.
+    send({ type: 'openExternal', url: start.approveUrl });
+
+    var until = Date.now() + 120000;
+    (function poll() {
+      if (gen !== pairGen) return;                          // superseded by a newer Connect
+      if (conn.state !== 'pairing') return;                 // cancelled by Disconnect
+      if (Date.now() > until) {
+        conn.state = 'found';
+        statusEl.textContent = 'Pairing timed out — try again.';
+        paint(); return;
+      }
+      api('/pair/' + encodeURIComponent(start.pairId) + '/status').then(function (r) {
+        if (r.pending) { setTimeout(poll, 1200); return; }
+        conn.token = r.token; conn.project = r.project;
+        send({ type: 'paired', token: r.token, project: r.project });
+        hello(true);
+      }).catch(function () { setTimeout(poll, 1500); });
+    })();
+  };
+
+  /* ─────────────────────────── manual mode ─────────────────────────── */
+
+  function fill(sel, items, placeholder, value) {
+    // Keep whatever was chosen unless the caller names a value — a refill must
+    // never silently discard the user's selection.
+    var keep = value === undefined ? sel.value : value;
+    sel.innerHTML = '';
+    var opt0 = document.createElement('option');
+    opt0.value = ''; opt0.textContent = placeholder;
+    sel.appendChild(opt0);
+    items.forEach(function (it) {
+      var o = document.createElement('option');
+      o.value = it.id; o.textContent = it.label;
+      sel.appendChild(o);
+    });
+    sel.value = keep || '';
+    if (sel.value !== (keep || '')) sel.value = '';   // the old choice is gone
+    syncCombo(sel);
+  }
+
+  function kindOf() {
+    var el = document.querySelector('input[name=kind]:checked');
+    return el ? el.value : 'section';
+  }
+
+  /* ─────────────────── searchable select ───────────────────
+     Wraps a <select> without replacing it: the select keeps the value, so
+     uiState(), fill() and every existing reader are untouched. */
+
+  var combos = new Map();
+
+  function enhanceSelect(sel) {
+    var wrap = document.createElement('div');
+    wrap.className = 'combo';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'txt';
+    input.setAttribute('role', 'combobox');
+    input.setAttribute('aria-expanded', 'false');
+    input.setAttribute('aria-autocomplete', 'list');
+    input.autocomplete = 'off';
+
+    var list = document.createElement('ul');
+    list.className = 'combo-list';
+    list.setAttribute('role', 'listbox');
+    list.id = sel.id + '-list';
+    list.hidden = true;
+    input.setAttribute('aria-controls', list.id);
+
+    wrap.appendChild(input);
+    wrap.appendChild(list);
+
+    var c = { sel: sel, input: input, list: list, open: false, active: -1, items: [] };
+    combos.set(sel.id, c);
+
+    input.addEventListener('focus', function () { openCombo(c, ''); });
+    input.addEventListener('input', function () { openCombo(c, input.value); });
+    input.addEventListener('keydown', function (e) { comboKey(c, e); });
+    // A click outside closes it; blur alone fires before the list's own click.
+    input.addEventListener('blur', function () {
+      setTimeout(function () { if (c.open) closeCombo(c); }, 120);
+    });
+    syncCombo(sel);
+    return c;
+  }
+
+  // The label shown when the list is shut is whatever the select says now.
+  function syncCombo(sel) {
+    var c = combos.get(sel && sel.id);
+    if (!c) return;
+    var opt = sel.options[sel.selectedIndex];
+    c.input.value = '';
+    c.input.placeholder = opt ? opt.textContent : '';
+    c.input.disabled = sel.disabled;
+    if (c.open) closeCombo(c);
+  }
+
+  function optionsOf(c, query) {
+    var q = String(query || '').toLowerCase().trim();
+    var out = [];
+    for (var i = 0; i < c.sel.options.length; i++) {
+      var o = c.sel.options[i];
+      if (!o.value) continue;                       // the placeholder row
+      if (q && o.textContent.toLowerCase().indexOf(q) === -1) continue;
+      out.push({ value: o.value, label: o.textContent });
+    }
+    return out;
+  }
+
+  function openCombo(c, query) {
+    if (c.sel.disabled) return;
+    c.items = optionsOf(c, query);
+    c.list.innerHTML = '';
+
+    if (!c.items.length) {
+      var e = document.createElement('li');
+      e.className = 'combo-empty';
+      e.textContent = c.sel.options.length > 1 ? 'No match.' : 'Nothing to choose yet.';
+      c.list.appendChild(e);
+    } else {
+      c.items.forEach(function (it, i) {
+        var li = document.createElement('li');
+        li.id = c.list.id + '-' + i;
+        li.setAttribute('role', 'option');
+        li.setAttribute('aria-selected', String(it.value === c.sel.value));
+        li.textContent = it.label;
+        li.title = it.label;
+        // mousedown, not click: blur would close the list first.
+        li.addEventListener('mousedown', function (ev) { ev.preventDefault(); pick(c, i); });
+        c.list.appendChild(li);
+      });
+    }
+
+    c.active = c.items.length ? 0 : -1;
+    paintActive(c);
+    c.list.hidden = false;
+    c.open = true;
+    c.input.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeCombo(c) {
+    c.list.hidden = true;
+    c.open = false;
+    c.active = -1;
+    c.input.value = '';
+    c.input.removeAttribute('aria-activedescendant');
+    c.input.setAttribute('aria-expanded', 'false');
+  }
+
+  function paintActive(c) {
+    var lis = c.list.querySelectorAll('li[role=option]');
+    for (var i = 0; i < lis.length; i++) lis[i].classList.toggle('active', i === c.active);
+    if (c.active >= 0 && lis[c.active]) {
+      c.input.setAttribute('aria-activedescendant', lis[c.active].id);
+      lis[c.active].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  function pick(c, i) {
+    var it = c.items[i];
+    if (!it) return;
+    c.sel.value = it.value;
+    closeCombo(c);
+    c.input.placeholder = it.label;
+    // Existing handlers listen on the select, so tell it the value moved.
+    c.sel.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function comboKey(c, e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!c.open) return openCombo(c, c.input.value);
+      if (!c.items.length) return;
+      c.active = (c.active + (e.key === 'ArrowDown' ? 1 : -1) + c.items.length) % c.items.length;
+      paintActive(c);
+    } else if (e.key === 'Enter') {
+      if (c.open && c.active >= 0) { e.preventDefault(); pick(c, c.active); }
+    } else if (e.key === 'Escape') {
+      if (c.open) { e.preventDefault(); e.stopPropagation(); closeCombo(c); c.input.blur(); }
+    }
+  }
+
+  // A wrapped select is no longer the visible element — its .combo wrapper is —
+  // so hiding the select alone left the search box on screen in its grid cell.
+  function setField(id, hidden) {
+    var el = $(id);
+    var c = combos.get(id);
+    (c ? c.sel.parentNode : el).hidden = hidden;
+  }
+
+  function refreshManual() {
+    var live = conn.state === 'paired';
+    var kind = kindOf();
+    var isUpdate = kind === 'update';
+
+    // Each kind has exactly one destination, so only one is ever on screen:
+    //   section    an existing Webflow page, picked from the live list
+    //   page       a slug for a page that does not exist yet
+    //   component  created once, then instanced — no destination to choose
+    //   update     the component it replaces; it is placed nowhere
+    var isPage = kind === 'page';
+    var isComponent = kind === 'component';
+    ['compLbl', 'wComp', 'compPad'].forEach(function (id) { setField(id, !isUpdate); });
+
+    // Both section and page choose a Webflow page. A whole frame can land on one
+    // that already exists just as easily as on a new one; offering only "new"
+    // forced a slug to be invented for a page you already had.
+    // pagePad is that row's third grid cell — leaving it behind shunts the next
+    // row one column along.
+    // pagePad is that row's third grid cell — leaving it behind shunts the next
+    // row one column along.
+    ['pageLbl', 'wPage', 'pagePad'].forEach(function (id) {
+      setField(id, isUpdate || isComponent);
+    });
+    $('pageLbl').textContent = isPage ? 'Build into' : 'Page';
+
+    // The slug fields appear only when the make-a-page entry is chosen.
+    var makingNew = isPage && $('wPage').value === NEW_PAGE;
+    ['newPageLbl', 'pageSlug', 'pageTitle'].forEach(function (id) { setField(id, !makingNew); });
+
+    // A page is built out of sections and the queue takes them one at a time, so
+    // when the chosen frame holds sections, offer to queue those rather than send
+    // the whole page as one enormous capture.
+    var picked = frames.filter(function (f) { return f.id === $('fFrame').value; })[0];
+    var kids = picked ? (picked.children || 0) : 0;
+    var offerEach = isPage && kids > 0;
+    ['eachLbl', 'eachWrap'].forEach(function (id) { setField(id, !offerEach); });
+    if (offerEach) $('eachCount').textContent = kids + ' inside';
+    else $('eachSection').checked = false;
+
+    $('wPage').disabled = !live || !wPages.length;
+    $('wComp').disabled = !live || !wComps.length;
+    if (!live) {
+      fill($('wPage'), [], 'connect the app to load pages…');
+      fill($('wComp'), [], 'connect the app to load components…');
+    }
+    mirrorDisabled();
+  }
+
+  // The search inputs stand in front of their selects, so they have to carry the
+  // same disabled state or you can type into a picker that has nothing in it.
+  function mirrorDisabled() {
+    ['fPage', 'fFrame', 'wPage', 'wComp'].forEach(function (id) {
+      var c = combos.get(id);
+      if (!c) return;
+      c.input.disabled = c.sel.disabled;
+      if (c.sel.disabled && c.open) closeCombo(c);
+    });
+  }
+  [].forEach.call(document.querySelectorAll('input[name=kind]'), function (el) {
+    el.onchange = function () {
+      // The "＋ Create a new page…" entry only exists for a page capture.
+      if (wPages.length) fill($('wPage'), pageOptions(kindOf()), 'page…');
+      refreshManual();
+    };
+  });
+  // Choosing it reveals the slug fields.
+  $('wPage').addEventListener('change', refreshManual);
+
+  /* The lists come from the project's cache, which only the app can fill — the
+     plugin has no Webflow token and is not meant to. So this asks the app to
+     pull, then re-reads. Without it a page added in Webflow after pairing simply
+     never appeared, with nothing on screen to explain why. */
+  $('fetchWf').onclick = async function () {
+    var btn = $('fetchWf');
+    btn.disabled = true;
+    var was = btn.textContent;
+    btn.textContent = 'Fetching…';
+    statusEl.textContent = 'Asking the app to fetch from Webflow…';
+    try {
+      var r = await api('/refresh', { method: 'POST' });
+      await loadWebflow(true);
+      statusEl.textContent = 'Fetched ' + r.pages + ' page(s) and ' + r.components + ' component(s).';
+    } catch (e) {
+      statusEl.textContent = 'Could not fetch: ' + e.message;
+    }
+    btn.textContent = was;
+    btn.disabled = false;
+  };
+  $('fFrame').addEventListener('change', refreshManual);
+
+  // force=true only on an explicit reconnect. The heartbeat calls hello() every
+  // 15s, and refetching the lists on each tick would rebuild both selects
+  // underneath whoever is using them.
+  // Sentinel for "make a page that does not exist yet". No real slug can collide
+  // with it — every real one starts with a slash.
+  var NEW_PAGE = '\u0000new';
+
+  function pageOptions(kind) {
+    var list = wPages.slice();
+    if (kind === 'page') list.push({ id: NEW_PAGE, label: '＋ Create a new page…' });
+    return list;
+  }
+
+  async function loadWebflow(force) {
+    if (!force && (wPages.length || wComps.length)) { refreshManual(); return; }
+    try {
+      var p = await api('/pages');
+      wPages = (p.pages || []).map(function (x) {
+        return { id: x.publishedPath || x.slug || x.id, label: x.publishedPath || x.title || x.slug };
+      });
+      fill($('wPage'), pageOptions(kindOf()), wPages.length ? 'page…' : 'no pages cached');
+    } catch (e) { wPages = []; }
+    try {
+      var c = await api('/components');
+      wComps = (c.components || []).map(function (x) {
+        return { id: x.id, label: x.name + (x.group ? '  · ' + x.group : '') };
+      });
+      fill($('wComp'), wComps, wComps.length ? 'component…' : 'no components cached');
+    } catch (e) { wComps = []; }
+    refreshManual();
+  }
+
+  /* ───────────────────────────── the queue ─────────────────────────────
+     Reading the queue in Figma so you can see what is already lined up, and
+     where this capture would land, without switching to the app. */
+
+  function renderQueue(plan) {
+    var body = $('queueBody');
+    body.innerHTML = '';
+    var steps = (plan && plan.steps) || [];
+    var probCount = ((plan && plan.problems) || []).length;
+    $('qCount').textContent =
+      (steps.length ? '  ' + steps.length + ' section(s)' : '') +
+      (probCount ? '  · ' + probCount + ' to fix' : '');
+
+    var problems = (plan && plan.problems) || [];
+
+    if (!steps.length && !problems.length) {
+      var e = document.createElement('div');
+      e.className = 'qempty';
+      e.textContent = plan ? 'Nothing queued yet.' : 'Could not read the queue.';
+      body.appendChild(e);
+      return;
+    }
+
+    var page = null, n = 0;
+    steps.forEach(function (st) {
+      if (st.page !== page) {
+        page = st.page; n = 0;
+        var h = document.createElement('div');
+        h.className = 'qpage';
+        h.textContent = page;
+        body.appendChild(h);
+      }
+      n++;
+      var row = document.createElement('div');
+      row.className = 'qrow' + (st.status === 'done' ? ' is-done' : '');
+
+      var MARK = { done: '✓', building: '◐', blocked: '!', queued: '○' };
+      var num = document.createElement('span');
+      num.className = 'n st-' + (st.status || 'queued');
+      num.textContent = MARK[st.status] || '○';
+      num.title = st.status || 'queued';
+      var nm  = document.createElement('span'); nm.className = 'nm';
+      nm.textContent = st.section; nm.title = st.section;
+
+      var bits = [];
+      if (st.status && st.status !== 'queued') bits.push(st.status);
+      bits.push(st.build);
+      if (st.build === 'component' && st.group) bits.push(st.group);
+      if (st.assets && st.assets.length) bits.push(st.assets.length + ' asset(s)');
+      if (st.reuse && st.reuse.length) bits.push('reuse ' + st.reuse.join('+'));
+      var meta = document.createElement('span');
+      meta.className = 'meta'; meta.textContent = bits.join(' · ');
+
+      row.appendChild(num); row.appendChild(nm); row.appendChild(meta);
+      body.appendChild(row);
+    });
+
+    // A section that is on no page is written but never built. Without this the
+    // panel would say "nothing queued" right after reporting a successful write,
+    // which reads as a failed capture rather than a missing page target.
+    if (problems.length) {
+      var h = document.createElement('div');
+      h.className = 'qsub';
+      h.textContent = problems.length + ' to fix';
+      body.appendChild(h);
+
+      problems.forEach(function (pr) {
+        var d = document.createElement('div');
+        d.className = 'qprob ' + (pr.level === 'error' ? 'error' : 'warn');
+        var mk = document.createElement('span');
+        mk.className = 'mark'; mk.textContent = pr.level === 'error' ? '✗' : '!';
+        var w = document.createElement('span');
+        w.className = 'what';
+        w.textContent = (pr.where ? pr.where + ' — ' : '') + pr.msg;
+        d.appendChild(mk); d.appendChild(w);
+        body.appendChild(d);
+      });
+    }
+  }
+
+  async function loadQueue() {
+    if (conn.state !== 'paired') { renderQueue(null); return; }
+    try { renderQueue(await api('/queue')); }
+    catch (e) { renderQueue(null); }
+  }
+  $('qRefresh').onclick = function (e) { e.preventDefault(); loadQueue(); };
+
+  function setMode(m) {
+    mode = m;
+    $('modeAuto').setAttribute('aria-pressed', String(m === 'auto'));
+    $('modeManual').setAttribute('aria-pressed', String(m === 'manual'));
+    $('modeCopy').setAttribute('aria-pressed', String(m === 'copy'));
+    [].forEach.call($('modeHelp').children, function (row) {
+      row.classList.toggle('on', row.getAttribute('data-mode') === m);
+    });
+    $('manual').hidden = m !== 'manual';
+
+    // Auto is the copy-to-chat path: the dump IS the deliverable, so it stays
+    // open. Manual sends to the queue, so the dump collapses to a receipt and
+    // the queue takes its place.
+    var manual = m === 'manual';
+    $('run').textContent = manual ? 'Add to queue' : 'Capture selection';
+    setOutOpen(!manual);
+    $('queueWrap').hidden = !manual;
+
+    if (manual) {
+      if (!pages.length) send({ type: 'pages' });
+      loadWebflow(false);
+      loadQueue();
+      refreshManual();
+    }
+    clearOutput();
+    statusEl.textContent = manual ? 'Pick a frame, then say what it is.'
+      : m === 'copy' ? 'Capture and copy — nothing is queued.'
+      : 'Select a frame, then capture.';
+  }
+  $('modeAuto').onclick = function () { setMode('auto'); };
+  $('modeManual').onclick = function () { setMode('manual'); };
+  $('modeCopy').onclick = function () { setMode('copy'); };
+
+  $('fPage').onchange = function () {
+    frames = [];
+    fill($('fFrame'), [], 'loading…');
+    $('fFrame').disabled = true;
+    mirrorDisabled();
+    if (this.value) send({ type: 'frames', pageId: this.value });
+  };
+  $('wComp').onchange = refreshManual;
+
+  // Following a canvas selection means possibly switching page first, and the
+  // frame list for that page arrives asynchronously — so the frame is remembered
+  // and applied when it does.
+  var pendingFrame = null;
+
+  function syncPickersTo(t) {
+    if ($('fPage').value !== t.pageId) {
+      fill($('fPage'), pages, 'page…', t.pageId);
+      pendingFrame = t.nodeId;
+      frames = [];
+      fill($('fFrame'), [], 'loading…');
+      $('fFrame').disabled = true;
+      mirrorDisabled();
+      send({ type: 'frames', pageId: t.pageId });
+      return;
+    }
+    applyFrame(t.nodeId);
+  }
+
+  function applyFrame(nodeId) {
+    if (!nodeId) return;
+    // Only if the list actually holds it — a deeper node resolves to an ancestor
+    // upstream, so a miss here means the page changed underneath us.
+    if (!frames.some(function (f) { return f.id === nodeId; })) return;
+    fill($('fFrame'), frames, 'frame…', nodeId);
+    $('fFrame').disabled = false;
+    mirrorDisabled();
+    refreshManual();
+    statusEl.textContent = 'Following the canvas selection.';
+  }
+
+  /* ────────────────────────────── capture ────────────────────────────── */
+
+  function uiState() {
+    var manual = mode === 'manual';
+    var kind = manual ? kindOf() : 'section';
+    var comp = null;
+    if (manual && kind === 'update' && $('wComp').value) {
+      var picked = wComps.filter(function (c) { return c.id === $('wComp').value; })[0];
+      comp = { id: $('wComp').value, name: picked ? picked.label.split('  · ')[0] : '' };
+    }
+    // A leading slash is what the queue and Webflow both use, and typing it is
+    // the kind of thing nobody should have to remember.
+    var slug = $('pageSlug').value.trim();
+    if (slug && slug.charAt(0) !== '/') slug = '/' + slug;
+
+    var chosen = $('wPage').value;
+    var makingNew = kind === 'page' && chosen === NEW_PAGE;
+
+    // A page capture can land on a page that already exists or make one; only
+    // the second may create, so a mistyped slug on a section still fails loudly.
+    var target = null;
+    if (manual && (kind === 'section' || kind === 'page')) {
+      target = makingNew ? (slug || null) : (chosen && chosen !== NEW_PAGE ? chosen : null);
+    }
+
+    return {
+      mode: mode,
+      kind: kind,
+      site: conn.site || null,
+      styleGuide: conn.styleGuide || null,
+      rootRole: $('rootRole').value,
+      nodeId: manual ? $('fFrame').value : null,
+      page: target,
+      createPage: makingNew,
+      eachSection: !!($('eachSection').checked && !$('eachWrap').hidden),
+      notes: manual ? ($('notes').value.trim() || null) : null,
+      title: makingNew ? ($('pageTitle').value.trim() || null) : null,
+      component: comp
+    };
+  }
+
+  function setOutOpen(open) {
+    $('outWrap').classList.toggle('collapsed', !open);
+    $('outToggle').setAttribute('aria-expanded', String(open));
+  }
+  $('outToggle').onclick = function () {
+    setOutOpen($('outWrap').classList.contains('collapsed'));
+  };
+
+  function setBusy(on) {
+    busy = on;
+    $('run').disabled = on;
+    $('spin').hidden = !on;
+    document.body.classList.toggle('busy', on);
+    if (on) $('copy').disabled = true;
+  }
+
+  function clearOutput() {
+    $('outToggle').textContent = 'Output';
+    out.value = '';
+    $('copy').disabled = true;
+    shelf.innerHTML = '';
+    svgshelf.innerHTML = '';
+    note.hidden = true;
+  }
+
+  $('run').onclick = function () {
+    var ui = uiState();
+    if (ui.mode === 'manual' && !ui.nodeId) { statusEl.textContent = 'Pick a frame first.'; return; }
+    if (ui.kind === 'page' && !ui.page) {
+      statusEl.textContent = ui.createPage
+        ? 'Give the new page a slug, e.g. /about.'
+        : 'Pick the Webflow page to build into, or choose ＋ Create a new page.';
+      return;
+    }
+    if (ui.kind === 'update' && !ui.component) {
+      statusEl.textContent = 'Pick the component this replaces.'; return;
+    }
+    setBusy(true);
+    statusEl.textContent = 'Starting…';
+    clearOutput();
+    send({ type: 'run', ui: ui });
+  };
+
+  function flash(btn, text) {
+    var was = btn.textContent;
+    btn.textContent = text;
+    setTimeout(function () { btn.textContent = was; }, 1400);
+  }
+
+  // Text copy, unlike image copy, genuinely works here: writeText is usually
+  // permitted, and where it is not, execCommand over a selected textarea is
+  // gated on a user gesture rather than Permissions-Policy.
+  async function copyText(text, btn, label) {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (btn) flash(btn, 'Copied');
+      if (label) statusEl.textContent = label;
+      return;
+    } catch (e) { /* fall through to the legacy path */ }
+
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    if (btn) flash(btn, ok ? 'Copied' : 'Failed');
+    if (label && ok) statusEl.textContent = label;
+  }
+
+  $('copy').onclick = function () {
+    copyText(out.value, null, 'Copied ' + out.value.length.toLocaleString() + ' chars.');
+  };
+
+  // Icons are exported once and referenced on repeats, so this list matches the
+  // "SVG #n" markers in the output above.
+  function addSvg(entry, i) {
+    var box = document.createElement('div');
+    box.className = 'thumb';
+
+    var img = document.createElement('img');
+    // Rendered via <img> rather than innerHTML so the markup can never execute.
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(entry.svg);
+    img.alt = entry.label;
+
+    var cap = document.createElement('span');
+    cap.textContent = '#' + (i + 1) + ' ' + entry.label;
+    cap.title = entry.file || entry.label;
+
+    var acts = document.createElement('div');
+    acts.className = 'acts';
+    var btn = document.createElement('button');
+    btn.textContent = 'Copy SVG';
+    btn.title = 'Copy this SVG source to the clipboard';
+    btn.onclick = function () { copyText(entry.svg, btn); };
+
+    acts.appendChild(btn);
+    box.appendChild(img);
+    box.appendChild(cap);
+    box.appendChild(acts);
+    svgshelf.appendChild(box);
+  }
+
+  function save(blob, name, btn) {
+    var url = URL.createObjectURL(blob);
+    try {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (btn) flash(btn, 'Saved');
+    } catch (e) {
+      if (btn) flash(btn, 'Blocked');
+      note.hidden = false;
+    }
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  // Downloading is the only way an image leaves this iframe, and that is a
+  // platform limit rather than an omission:
+  //   · clipboard  — navigator.clipboard.write() needs clipboard-write, which
+  //                  Permissions-Policy denies to Figma's sandboxed opaque
+  //                  origin. execCommand only writes a text/html flavour that
+  //                  no paste target reads as an image.
+  //   · drag-out   — a drop target reads dataTransfer.files, which only a real
+  //                  OS file drag populates. DownloadURL cannot synthesize one
+  //                  from a data: URL, and Figma desktop is a separate app from
+  //                  the browser you would be dropping into.
+  // For clipboard, Figma's own right-click → Copy as PNG on the canvas is the
+  // correct tool and already does the job.
+  function deliver(name, bytes) {
+    var blob = new Blob([bytes], { type: 'image/png' });
+
+    var box = document.createElement('div');
+    box.className = 'thumb';
+
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+    img.alt = name;
+
+    var cap = document.createElement('span');
+    cap.textContent = name;
+    cap.title = name;
+
+    var acts = document.createElement('div');
+    acts.className = 'acts';
+
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save PNG';
+    saveBtn.title = 'Download this image';
+    saveBtn.onclick = function () { save(blob, name, saveBtn); };
+
+    acts.appendChild(saveBtn);
+    box.appendChild(img);
+    box.appendChild(cap);
+    box.appendChild(acts);
+    shelf.appendChild(box);
+  }
+
+  /* ─────────────────────── send to the paired project ───────────────────────
+     Sending is no longer a toggle: once the file is paired there is a project to
+     send to, and that is what you wanted. Unpaired, the output still lands in the
+     textarea and the shelves, so a stopped bridge never costs you a run. */
+
+  function toBase64(bytes) {
+    var arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    var bin = '', step = 0x8000;
+    for (var i = 0; i < arr.length; i += step) {
+      bin += String.fromCharCode.apply(null, arr.subarray(i, i + step));
+    }
+    return btoa(bin);
+  }
+
+  async function sendToQueue(msg) {
+    var ui = uiState();
+    var payload = {
+      name: msg.name || 'section',
+      dump: msg.text,
+      images: (msg.images || []).map(function (im) {
+        return { name: im.name, base64: toBase64(im.bytes) };
+      }),
+      svgs: (msg.svgs || []).map(function (sv) {
+        return { name: sv.file, source: sv.svg };
+      })
+    };
+    if (mode !== 'copy') {
+      payload.target = {
+        kind: ui.kind, page: ui.page, createPage: ui.createPage,
+        title: ui.title, component: ui.component
+      };
+      if (ui.notes) payload.notes = ui.notes;
+    }
+
+    statusEl.textContent = 'Sending to ' + conn.project + '…';
+    try {
+      var r = await api('/section', { method: 'POST', body: payload });
+      statusEl.textContent = (r.replaced ? 'Replaced ' : 'Wrote ') + r.path +
+        (r.images.length ? '  +' + r.images.length + ' asset(s)' : '') +
+        (r.warning ? '  (' + r.warning + ')' : '');
+      // Notes describe the capture that just went, so they do not carry over to
+      // the next one by accident. A batch keeps them until its last section.
+      if (!msg.batch || msg.batch.index === msg.batch.total - 1) $('notes').value = '';
+      loadQueue();
+    } catch (e) {
+      statusEl.textContent = 'Queue refused: ' + e.message + ' — output kept below.';
+    }
+  }
+
+  /* ─────────────────────────────── messages ─────────────────────────────── */
+
+  var phase = '', total = 0;
+
+  onmessage = function (e) {
+    var msg = e.data.pluginMessage;
+    if (!msg) return;
+
+    if (msg.type === 'restore') {
+      if (msg.opts) {
+        if (msg.opts.rootRole) $('rootRole').value = msg.opts.rootRole;
+        setMode(msg.opts.mode || 'manual');
+      } else {
+        setMode('manual');
+      }
+      conn.token = msg.token || null;
+      conn.project = msg.project && msg.project.name ? msg.project.name : msg.project;
+      probe();
+      return;
+    }
+
+    if (msg.type === 'pages') {
+      pages = (msg.pages || []).map(function (p) { return { id: p.id, label: p.name }; });
+      fill($('fPage'), pages, 'page…', msg.current);
+      if (msg.current) send({ type: 'frames', pageId: msg.current });
+      return;
+    }
+
+    if (msg.type === 'frames') {
+      frames = (msg.frames || []).map(function (f) {
+        // Nested sections are indented so the page they belong to stays readable.
+        var indent = f.depth ? '   ↳ ' : '';
+        var kids = f.children ? '   (' + f.children + ' section' + (f.children === 1 ? '' : 's') + ')' : '';
+        return {
+          id: f.id, depth: f.depth || 0, children: f.children || 0,
+          label: indent + f.name + '   ' + f.w + '×' + f.h + kids
+        };
+      });
+      fill($('fFrame'), frames, frames.length ? 'frame…' : 'no frames on this page');
+      $('fFrame').disabled = !frames.length;
+      mirrorDisabled();
+      if (pendingFrame) { var want = pendingFrame; pendingFrame = null; applyFrame(want); }
+      refreshManual();
+      return;
+    }
+
+    if (msg.type === 'selection') {
+      // Manual mode does not take its SOURCE from the canvas, but selecting a
+      // section there should still point the pickers at it — otherwise you find
+      // the frame twice, once on the canvas and again in a dropdown.
+      if (mode === 'manual') {
+        if (!busy && msg.target && msg.target.nodeId) syncPickersTo(msg.target);
+        return;
+      }
+      // A new selection invalidates whatever is on screen. Never do this mid-run,
+      // or clicking around during a slow walk would wipe the incoming result.
+      if (busy) return;
+      clearOutput();
+      if (!msg.count) {
+        statusEl.textContent = 'Nothing selected.';
+      } else {
+        var extra = msg.count - msg.names.length;
+        statusEl.textContent = msg.names.join(', ') +
+          (extra > 0 ? ' +' + extra + ' more' : '') + ' — press Capture';
+      }
+      return;
+    }
+
+    if (msg.type === 'progress') {
+      if (msg.phase) phase = msg.phase;
+      if (msg.total) total = msg.total;
+      var bits = [phase || 'Working'];
+      if (msg.count) bits.push(msg.count + (total ? '/' + total : '') + ' layers');
+      if (msg.label) bits.push('· ' + msg.label);
+      statusEl.textContent = bits.join(' ') + '…';
+      return;
+    }
+
+    setBusy(false);
+
+    if (msg.type === 'error') {
+      out.value = msg.message;
+      statusEl.textContent = 'Error.';
+      return;
+    }
+
+    out.value = msg.text;
+    $('copy').disabled = false;
+
+    var svgs = msg.svgs || [];
+    svgs.forEach(addSvg);
+
+    var images = msg.images || [];
+    images.forEach(function (im, i) {
+      setTimeout(function () { deliver(im.name, im.bytes); }, i * 120);
+    });
+    if (images.length) note.hidden = false;
+
+    var summary = out.value.length.toLocaleString() + ' chars' +
+      (svgs.length ? ' · ' + svgs.length + ' SVG' : '') +
+      (images.length ? ' · ' + images.length + ' image(s)' : '');
+    statusEl.textContent = summary;
+    $('outToggle').textContent = 'Output — ' + summary;
+
+    // "Just copy" is the whole point of that mode — it never touches the queue,
+    // paired or not.
+    if (msg.batch) {
+      statusEl.textContent = 'Section ' + (msg.batch.index + 1) + ' of ' + msg.batch.total +
+        ': ' + msg.name;
+      // Keep the spinner up until the last one lands.
+      if (msg.batch.index < msg.batch.total - 1) setBusy(true);
+    }
+    if (conn.state === 'paired' && mode !== 'copy') sendToQueue(msg);
+  };
+
+  /* ── window resizing ──
+     clientX/clientY are relative to the iframe viewport, and the plugin window
+     is anchored at its top-left, so the pointer position under the corner grip
+     is the new width and height directly. */
+  var MIN_W = 460, MIN_H = 420, MAX_W = 1600, MAX_H = 1400;
+  var corner = $('corner');
+
+  function sizeFrom(e) {
+    return {
+      w: Math.min(MAX_W, Math.max(MIN_W, Math.floor(e.clientX + 4))),
+      h: Math.min(MAX_H, Math.max(MIN_H, Math.floor(e.clientY + 4)))
+    };
+  }
+
+  corner.addEventListener('pointerdown', function (e) {
+    corner.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  corner.addEventListener('pointermove', function (e) {
+    if (!corner.hasPointerCapture(e.pointerId)) return;
+    send({ type: 'resize', size: sizeFrom(e) });
+  });
+
+  corner.addEventListener('pointerup', function (e) {
+    corner.releasePointerCapture(e.pointerId);
+    // Persist only on release — saving on every move would hammer clientStorage.
+    send({ type: 'resizeEnd', size: sizeFrom(e) });
+  });
+
+  // The four pickers whose lists come from data — a Figma file can hold hundreds
+  // of frames and a Webflow site plenty of pages. rootRole keeps its plain select:
+  // five fixed options need no search.
+  ['fPage', 'fFrame', 'wPage', 'wComp'].forEach(function (id) { enhanceSelect($(id)); });
+
+  // Keeps the app's "plugin is open" state live rather than one-shot.
+  setInterval(function () { if (conn.state === 'paired') hello(); }, 15000);
+
+  send({ type: 'ready' });
+</script>

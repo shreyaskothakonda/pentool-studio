@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pentool.studio — an AI workflow from Figma to Webflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&amp;family=Manrope:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #0C0C0D; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #ECEAE2; text-decoration: none; }
+  a:hover { color: var(--ac, #C8F250); }
+  ::selection { background: var(--ac, #C8F250); color: #0C0C0D; }
+  @keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes blink { 50% { opacity: .25; } }
+  .rail a { display: block; }
+  .scroller { scrollbar-width: none; }
+  .scroller::-webkit-scrollbar { display: none; }
+</style>
+</helmet>
+<div style="--ac: {{ accent }}; background: #0C0C0D; color: #ECEAE2; font-family: 'Manrope', system-ui, sans-serif; font-size: 16.5px; line-height: 1.5; min-height: 100vh;">
+
+  <div class="rail" style="position: fixed; left: 0; top: 0; bottom: 0; width: 92px; border-right: 1px solid rgba(236,234,226,.13); display: flex; flex-direction: column; justify-content: space-between; padding: 22px 0 24px; z-index: 40; background: #0C0C0D;">
+    <a href="#top" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -.03em; text-align: center; color: var(--ac, #C8F250);">p.</a>
+    <div style="display: flex; flex-direction: column; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: rgba(236,234,226,.42); text-align: center;">
+      <a href="#loop" style="color: inherit;" style-hover="color: #C8F250;">01</a>
+      <a href="#why" style="color: inherit;" style-hover="color: #C8F250;">02</a>
+      <a href="#not" style="color: inherit;" style-hover="color: #C8F250;">03</a>
+      <a href="#pieces" style="color: inherit;" style-hover="color: #C8F250;">04</a>
+      <a href="#webflow" style="color: inherit;" style-hover="color: #C8F250;">05</a>
+      <a href="#does" style="color: inherit;" style-hover="color: #C8F250;">06</a>
+      <a href="#knowing" style="color: inherit;" style-hover="color: #C8F250;">07</a>
+      <a href="#limits" style="color: inherit;" style-hover="color: #C8F250;">08</a>
+      <a href="#facts" style="color: inherit;" style-hover="color: #C8F250;">09</a>
+      <a href="#now" style="color: inherit;" style-hover="color: #C8F250;">10</a>
+    </div>
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .18em; color: rgba(236,234,226,.35); writing-mode: vertical-rl; transform: rotate(180deg); margin: 0 auto;">FIGMA → WEBFLOW</div>
+  </div>
+
+  <div style="margin-left: 92px;">
+
+    <header style="position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 0 40px; height: 66px; background: rgba(12,12,13,.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="display: flex; align-items: center; gap: 16px; flex: 0 0 auto;">
+        <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -.025em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">pentool.studio</span>
+        
+      </div>
+      <nav style="display: flex; align-items: center; gap: 20px; font-size: 14px; color: rgba(236,234,226,.75); white-space: nowrap; flex: 0 0 auto;">
+        <a href="#loop" style="white-space: nowrap;">How it works</a>
+        <a href="#pieces" style="white-space: nowrap;">The apps</a>
+        <a href="#webflow" style="white-space: nowrap;">Webflow</a>
+        <a href="#does" style="white-space: nowrap;">What it does</a>
+        <a href="#limits" style="white-space: nowrap;">Limits</a>
+        <a href="#now" style="padding: 9px 15px; background: var(--ac, #C8F250); color: #0C0C0D; font-weight: 600; white-space: nowrap;" style-hover="background: #ECEAE2;">Ask for a test build</a>
+      </nav>
+    </header>
+
+    <section id="top" style="border-bottom: 1px solid rgba(236,234,226,.13); background-image: linear-gradient(rgba(236,234,226,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(236,234,226,.045) 1px, transparent 1px); background-size: 92px 92px;">
+      <div style="padding: 84px 40px 0; animation: up .7s cubic-bezier(.2,.7,.3,1) both;">
+        <div style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase;"><span style="color: rgba(236,234,226,.45);">An AI workflow for Figma → Webflow</span><span style="display: inline-flex; align-items: center; gap: 7px; color: rgba(236,234,226,.6); border: 1px solid rgba(236,234,226,.22); padding: 5px 10px; white-space: nowrap;"><span style="width: 5px; height: 5px; background: var(--ac, #C8F250); display: inline-block; animation: blink 2.4s infinite;"></span>In private testing</span></div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(42px, 6.6vw, 104px); line-height: .94; letter-spacing: -.035em; margin: 0 0 36px; max-width: 21ch; text-wrap: pretty;">Build the Figma design into the Webflow site <span style="color: var(--ac, #C8F250);">you already have</span> — one section at a time.</h1>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(430px, 1fr)); gap: 56px; align-items: end; padding-bottom: 56px;">
+          <div>
+            <p style="font-size: 19px; line-height: 1.5; color: rgba(236,234,226,.72); margin: 0 0 32px; max-width: 44ch; text-wrap: pretty;">It reads your design with the tokens, component structure and prototype wiring intact, proposes class names from your own style guide, checks contrast as it goes — then builds one section at a time and stops so you can look.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+              <a href="#now" style="padding: 15px 24px; background: var(--ac, #C8F250); color: #0C0C0D; font-weight: 600; white-space: nowrap;" style-hover="background: #ECEAE2;">Ask for a test build</a>
+              <a href="#loop" style="padding: 15px 24px; border: 1px solid rgba(236,234,226,.25); white-space: nowrap;" style-hover="border-color: #C8F250;">See the loop</a>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(236,234,226,.45); white-space: nowrap;">Launching soon · macOS</span>
+            </div>
+          </div>
+          <div style="border: 1px solid rgba(236,234,226,.16); background: #101012; font-family: 'JetBrains Mono', monospace; font-size: clamp(9.5px, 1.02vw, 12.5px); line-height: 1.75; overflow-x: auto;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid rgba(236,234,226,.13); color: rgba(236,234,226,.45); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;">
+              <span style="width: 6px; height: 6px; background: var(--ac, #C8F250);"></span>real capture · markets-grid
+            </div>
+            <div style="padding: 18px 20px 22px; display: block;">
+              <div style="white-space: pre; min-height: 1.75em; color: rgba(236,234,226,.4);">=== BUILD CONTRACT (client-first) ===</div>
+              <div style="white-space: pre; min-height: 1.75em;">site: GCE Dev</div>
+              <div style="white-space: pre; min-height: 1.75em;">root: "markets-grid" · section</div>
+              <div style="white-space: pre; min-height: 1.75em;">&nbsp;</div>
+              <div style="white-space: pre; min-height: 1.75em;">frame "market-card"  328×344  · component</div>
+              <div style="white-space: pre; min-height: 1.75em;">    wf: DivBlock .market-card_component   <span style="color: var(--ac, #C8F250);">[new]</span></div>
+              <div style="white-space: pre; min-height: 1.75em;">        display: flex</div>
+              <div style="white-space: pre; min-height: 1.75em;">        flex-direction: column</div>
+              <div style="white-space: pre; min-height: 1.75em;">        gap: 1rem</div>
+              <div style="white-space: pre; min-height: 1.75em;">        padding: 2rem</div>
+              <div style="white-space: pre; min-height: 1.75em;">        border-radius: 0.75rem</div>
+              <div style="white-space: pre; min-height: 1.75em;">  instance "market-card"</div>
+              <div style="white-space: pre; min-height: 1.75em;">      wf: <span style="color: var(--ac, #C8F250);">REUSE</span> component "market-card" — do not rebuild</div>
+              <div style="white-space: pre; min-height: 1.75em;">  text "title"</div>
+              <div style="white-space: pre; min-height: 1.75em;">      wf: Heading h2 .heading-style-h2   <span style="color: #7FD1A0;">[existing]</span></div>
+              <div style="white-space: pre; min-height: 1.75em;">&nbsp;</div>
+              <div style="white-space: pre; min-height: 1.75em; color: rgba(236,234,226,.4);">=== ACCESSIBILITY ===</div>
+              <div style="white-space: pre; min-height: 1.75em;"><span style="color: #FF7A5C;">✗</span> faint-caption  #EDEDED on #FFFFFF → 1.17:1, fails AA</div>
+              <div style="white-space: pre; min-height: 1.75em;"><span style="color: #FF7A5C;">✗</span> photo  image needs alt text — layer name is not alt text</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); border-top: 1px solid rgba(236,234,226,.13); font-family: 'JetBrains Mono', monospace;">
+        <div style="padding: 20px 24px; border-right: 1px solid rgba(236,234,226,.13);">
+          <div style="font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-bottom: 8px;">Figma plan</div>
+          <div style="font-size: 14px;">Free — Design mode</div>
+        </div>
+        <div style="padding: 20px 24px; border-right: 1px solid rgba(236,234,226,.13);">
+          <div style="font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-bottom: 8px;">AI</div>
+          <div style="font-size: 14px;">Your Claude subscription</div>
+        </div>
+        <div style="padding: 20px 24px; border-right: 1px solid rgba(236,234,226,.13);">
+          <div style="font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-bottom: 8px;">Publishing</div>
+          <div style="font-size: 14px;">Staging only</div>
+        </div>
+        <div style="padding: 20px 24px;">
+          <div style="font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-bottom: 8px;">Tests</div>
+          <div style="font-size: 14px;">254 across both projects</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="loop" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 72px 40px 40px; display: flex; align-items: baseline; justify-content: space-between; gap: 40px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 22px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">01</span>
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(30px, 4vw, 54px); line-height: 1; letter-spacing: -.03em; margin: 0;">Five steps, and it stops after each one.</h2>
+        </div>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: rgba(236,234,226,.45);">Webflow has no undo API.</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); border-top: 1px solid rgba(236,234,226,.13);">
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 26px 32px; display: flex; flex-direction: column; gap: 22px;">
+          <svg width="100%" height="104" viewBox="0 0 112 104" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="8" y="12" width="96" height="80" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="8" y="12" width="96" height="14" fill="rgba(236,234,226,.1)"></rect>
+            <rect x="18" y="36" width="76" height="18" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="18" y="62" width="76" height="18" fill="none" stroke="var(--ac, #C8F250)" stroke-dasharray="4 3"></rect>
+            <rect x="15" y="59" width="6" height="6" fill="var(--ac, #C8F250)"></rect>
+            <rect x="91" y="59" width="6" height="6" fill="var(--ac, #C8F250)"></rect>
+            <rect x="15" y="77" width="6" height="6" fill="var(--ac, #C8F250)"></rect>
+            <rect x="91" y="77" width="6" height="6" fill="var(--ac, #C8F250)"></rect>
+          </svg>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 10px;">Step 1 · Figma</div>
+            <div style="font-size: 15.5px; color: rgba(236,234,226,.75);">Select a section, press Capture.</div>
+          </div>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 26px 32px; display: flex; flex-direction: column; gap: 22px;">
+          <svg width="100%" height="104" viewBox="0 0 112 104" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="8" y="16" width="96" height="18" fill="none" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="17" y="23" width="4" height="4" fill="var(--ac, #C8F250)"></rect>
+            <rect x="28" y="22" width="52" height="6" fill="rgba(236,234,226,.4)"></rect>
+            <rect x="8" y="42" width="96" height="18" fill="none" stroke="rgba(236,234,226,.24)"></rect>
+            <rect x="28" y="48" width="42" height="6" fill="rgba(236,234,226,.2)"></rect>
+            <rect x="8" y="68" width="96" height="18" fill="none" stroke="rgba(236,234,226,.24)"></rect>
+            <rect x="28" y="74" width="58" height="6" fill="rgba(236,234,226,.2)"></rect>
+          </svg>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 10px;">Step 2 · Queue</div>
+            <div style="font-size: 15.5px; color: rgba(236,234,226,.75);">It lands in the queue, checked, in build order.</div>
+          </div>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 26px 32px; display: flex; flex-direction: column; gap: 22px;">
+          <svg width="100%" height="104" viewBox="0 0 112 104" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="8" y="12" width="96" height="80" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="8" y="12" width="96" height="24" fill="rgba(236,234,226,.22)"></rect>
+            <rect x="8" y="36" width="96" height="20" fill="var(--ac, #C8F250)"></rect>
+            <path fill="none" d="M14 68 h84 M14 80 h60" stroke="rgba(236,234,226,.14)" stroke-width="6" stroke-dasharray="2 6"></path>
+          </svg>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 10px;">Step 3 · Build</div>
+            <div style="font-size: 15.5px; color: rgba(236,234,226,.75);">One section, then it stops.</div>
+          </div>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 26px 32px; display: flex; flex-direction: column; gap: 22px;">
+          <svg width="100%" height="104" viewBox="0 0 112 104" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="6" y="16" width="66" height="58" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="16" y="28" width="46" height="8" fill="rgba(236,234,226,.2)"></rect>
+            <rect x="16" y="42" width="30" height="8" fill="rgba(236,234,226,.2)"></rect>
+            <rect x="34" y="32" width="66" height="58" fill="#0C0C0D" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="44" y="44" width="46" height="8" fill="var(--ac, #C8F250)" opacity=".55"></rect>
+            <rect x="44" y="58" width="36" height="8" fill="var(--ac, #C8F250)" opacity=".3"></rect>
+            <path fill="none" d="M84 74 l4 5 l8 -11" stroke="var(--ac, #C8F250)" stroke-width="2"></path>
+          </svg>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 10px;">Step 4 · Check</div>
+            <div style="font-size: 15.5px; color: rgba(236,234,226,.75);">The built page, screenshotted next to the design.</div>
+          </div>
+        </div>
+        <div style="border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 26px 32px; display: flex; flex-direction: column; gap: 22px;">
+          <svg width="100%" height="104" viewBox="0 0 112 104" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <path fill="none" d="M56 22 a28 28 0 1 1 -26 18" stroke="rgba(236,234,226,.3)" stroke-width="1.5"></path>
+            <path fill="none" d="M50 14 L58 22 L50 30" stroke="var(--ac, #C8F250)" stroke-width="2"></path>
+            <rect x="40" y="46" width="32" height="6" fill="var(--ac, #C8F250)"></rect>
+            <rect x="40" y="58" width="20" height="6" fill="rgba(236,234,226,.22)"></rect>
+          </svg>
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 10px;">Step 5 · Continue</div>
+            <div style="font-size: 15.5px; color: rgba(236,234,226,.75);">Next section.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 80px 40px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 64px;">
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 22px; margin-bottom: 28px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">02</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.45);">Why</span>
+          </div>
+          <p style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(28px, 3.4vw, 44px); line-height: 1.06; letter-spacing: -.03em; margin: 0; text-wrap: pretty;">Handing a Figma file to a developer, or to an AI, loses almost everything that made it a design.</p>
+        </div>
+        <div style="display: grid; gap: 20px; color: rgba(236,234,226,.7); align-content: end; max-width: 56ch;">
+          <p style="margin: 0;">A screenshot loses the tokens. A code export loses the component structure. Figma's own MCP server hit a Starter-plan ceiling mid-project and stopped working. And the usual AI answer — paste a screenshot and hope — gives you hardcoded hex values, invented class names, and markup that ignores the design system the site is built on.</p>
+          <p style="margin: 0;">Meanwhile the knowledge that makes a rebuild correct lives nowhere durable: which components already exist, which classes are in the style guide, that <code style="font-family: 'JetBrains Mono', monospace; font-size: .88em; color: var(--ac, #C8F250);">set_text</code> silently does nothing on a DivBlock. It lives in the head of whoever built the site last, and it gets rediscovered every time.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="not" style="border-bottom: 1px solid rgba(236,234,226,.13); background: #101012;">
+      <div style="padding: 80px 40px 40px; display: flex; align-items: baseline; gap: 22px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">03</span>
+        <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(28px, 3.6vw, 48px); line-height: 1.02; letter-spacing: -.03em; margin: 0; max-width: 24ch;">Not a design-to-code exporter.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); border-top: 1px solid rgba(236,234,226,.13);">
+        <div style="border-right: 1px solid rgba(236,234,226,.13); padding: 34px 40px 40px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-bottom: 22px;">An exporter gives you</div>
+          <div style="display: grid; gap: 14px; color: rgba(236,234,226,.6);">
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: rgba(236,234,226,.35);">—</span>A pile of markup to reconcile by hand</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: rgba(236,234,226,.35);">—</span>Hex values where your tokens should be</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: rgba(236,234,226,.35);">—</span>New class names nobody asked for</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: rgba(236,234,226,.35);">—</span>Components rebuilt from scratch</div>
+          </div>
+        </div>
+        <div style="padding: 34px 40px 40px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 22px;">pentool.studio gives you</div>
+          <div style="display: grid; gap: 14px;">
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: var(--ac, #C8F250);">+</span>Instructions for extending the site you have</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: var(--ac, #C8F250);">+</span>Variables resolved to their token names</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: var(--ac, #C8F250);">+</span>Your style guide's classes, marked existing or new</div>
+            <div style="display: flex; gap: 14px;"><span style="font-family: 'JetBrains Mono', monospace; color: var(--ac, #C8F250);">+</span>Existing components reused, not duplicated</div>
+          </div>
+        </div>
+      </div>
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 28px 40px; color: rgba(236,234,226,.62);">It starts from what you already built — your classes, your components, your tokens — and writes the design in those terms. What comes out is not a new site. It is instructions for adding to yours.</div>
+    </section>
+
+    <section id="pieces" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 80px 40px 40px; display: flex; align-items: baseline; justify-content: space-between; gap: 32px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 22px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">04</span>
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; letter-spacing: -.03em; font-size: clamp(28px, 3.6vw, 48px); line-height: 1.02; margin: 0; max-width: 26ch;">Two products. One queue between them.</h2>
+        </div>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: rgba(236,234,226,.45);">Free Figma plan · macOS</span>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 48px 40px 56px; display: grid; grid-template-columns: minmax(0,.62fr) minmax(0,1fr); gap: 56px; align-items: center;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0C0C0D; background: var(--ac, #C8F250); padding: 5px 10px; font-weight: 500;">Product 01 · Figma plugin</span>
+          </div>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; letter-spacing: -.03em; font-size: clamp(34px, 4.4vw, 62px); line-height: .96; margin: 0 0 20px;">Pentool Studio</h3>
+          <p style="margin: 0 0 18px; font-size: 18px; color: rgba(236,234,226,.78); max-width: 46ch;">Select a frame, press <strong style="font-weight: 600; color: #ECEAE2;">Capture</strong>. It walks the tree resolving variables to token names, reading component props, segmenting mixed text, deduplicating icons and computing contrast as it goes.</p>
+          <p style="margin: 0 0 24px; color: rgba(236,234,226,.6); font-size: 15.5px; max-width: 46ch;">A local plugin. No build step, no dependencies, no server. It runs in Design mode — which is why it works on a free Figma plan when Dev Mode does not.</p>
+          <div style="display: grid; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: rgba(236,234,226,.6);">
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Tokens, not hex values</div>
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Contrast computed at capture time</div>
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Runs on the free plan</div>
+          </div>
+        </div>
+        <div style="border: 1px solid rgba(236,234,226,.16); background: #101012; padding: 20px;">
+            <svg width="100%" viewBox="0 0 800 330" preserveAspectRatio="xMidYMid meet" style="display: block; width: 100%; height: auto;">
+              <rect x="0.5" y="0.5" width="799" height="329" fill="#0C0C0D" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="40" y="26" width="420" height="278" fill="none" stroke="rgba(236,234,226,.16)"></rect>
+              <rect x="40" y="26" width="420" height="24" fill="rgba(236,234,226,.05)"></rect>
+              <rect x="54" y="35" width="70" height="7" fill="rgba(236,234,226,.24)"></rect>
+              <rect x="72" y="72" width="356" height="72" fill="rgba(236,234,226,.07)" stroke="rgba(236,234,226,.14)"></rect>
+              <rect x="92" y="92" width="150" height="12" fill="rgba(236,234,226,.22)"></rect>
+              <rect x="92" y="112" width="96" height="12" fill="rgba(236,234,226,.16)"></rect>
+              <rect x="72" y="168" width="356" height="104" fill="none" stroke="var(--ac, #C8F250)" stroke-width="1.5" stroke-dasharray="6 4"></rect>
+              <rect x="66" y="162" width="10" height="10" fill="var(--ac, #C8F250)"></rect>
+              <rect x="424" y="162" width="10" height="10" fill="var(--ac, #C8F250)"></rect>
+              <rect x="66" y="266" width="10" height="10" fill="var(--ac, #C8F250)"></rect>
+              <rect x="424" y="266" width="10" height="10" fill="var(--ac, #C8F250)"></rect>
+              <rect x="96" y="192" width="130" height="56" fill="var(--ac, #C8F250)" opacity=".2"></rect>
+              <rect x="246" y="192" width="130" height="56" fill="var(--ac, #C8F250)" opacity=".2"></rect>
+              <rect x="512" y="26" width="248" height="278" fill="#101012" stroke="rgba(236,234,226,.22)"></rect>
+              <rect x="512" y="26" width="248" height="34" fill="rgba(236,234,226,.05)"></rect>
+              <rect x="528" y="39" width="96" height="8" fill="rgba(236,234,226,.35)"></rect>
+              <rect x="528" y="78" width="216" height="34" fill="var(--ac, #C8F250)"></rect>
+              <rect x="560" y="90" width="70" height="10" fill="#0C0C0D"></rect>
+              <rect x="528" y="132" width="70" height="7" fill="rgba(236,234,226,.3)"></rect>
+              <rect x="528" y="150" width="216" height="18" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="536" y="156" width="90" height="6" fill="rgba(236,234,226,.22)"></rect>
+              <rect x="646" y="156" width="40" height="6" fill="var(--ac, #C8F250)" opacity=".6"></rect>
+              <rect x="528" y="174" width="216" height="18" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="536" y="180" width="70" height="6" fill="rgba(236,234,226,.22)"></rect>
+              <rect x="646" y="180" width="52" height="6" fill="var(--ac, #C8F250)" opacity=".6"></rect>
+              <rect x="528" y="198" width="216" height="18" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="536" y="204" width="104" height="6" fill="rgba(236,234,226,.22)"></rect>
+              <rect x="646" y="204" width="30" height="6" fill="#7FD1A0" opacity=".8"></rect>
+              <rect x="528" y="236" width="70" height="7" fill="rgba(236,234,226,.3)"></rect>
+              <rect x="528" y="254" width="130" height="8" fill="#7FD1A0" opacity=".7"></rect>
+              <rect x="528" y="270" width="96" height="8" fill="#FF7A5C" opacity=".7"></rect>
+            </svg>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-top: 16px;">Pentool Studio — capture panel in Figma</div>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); background: #101012; padding: 30px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 40px; align-items: center;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.45);">Between them · the pipeline</div>
+        <p style="margin: 0; color: rgba(236,234,226,.68); max-width: 90ch;">Sections land in a folder and a page manifest lists them in build order — static markup, or a component with typed props, optionally bound to a CMS collection. Before anything touches Webflow the whole queue is resolved, and a typo stops it dead.</p>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 48px 40px 56px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,.62fr); gap: 56px; align-items: center;">
+        <div style="border: 1px solid rgba(236,234,226,.16); background: #101012; padding: 20px;">
+            <svg width="100%" viewBox="0 0 800 330" preserveAspectRatio="xMidYMid meet" style="display: block; width: 100%; height: auto;">
+              <rect x="0.5" y="0.5" width="799" height="329" fill="#0C0C0D" stroke="rgba(236,234,226,.24)"></rect>
+              <rect x="0.5" y="0.5" width="799" height="32" fill="rgba(236,234,226,.05)" stroke="rgba(236,234,226,.24)"></rect>
+              <circle cx="20" cy="16" r="4.5" fill="rgba(236,234,226,.26)"></circle>
+              <circle cx="36" cy="16" r="4.5" fill="rgba(236,234,226,.26)"></circle>
+              <circle cx="52" cy="16" r="4.5" fill="rgba(236,234,226,.26)"></circle>
+              <rect x="360" y="12" width="90" height="8" fill="rgba(236,234,226,.24)"></rect>
+              <path fill="none" d="M300 32 V330 M560 32 V330" stroke="rgba(236,234,226,.18)"></path>
+              <rect x="20" y="50" width="86" height="8" fill="rgba(236,234,226,.3)"></rect>
+              <rect x="20" y="76" width="260" height="34" fill="none" stroke="var(--ac, #C8F250)"></rect>
+              <rect x="32" y="88" width="10" height="10" fill="var(--ac, #C8F250)"></rect>
+              <rect x="54" y="89" width="120" height="8" fill="rgba(236,234,226,.5)"></rect>
+              <rect x="214" y="89" width="54" height="8" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+              <rect x="20" y="120" width="260" height="34" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="32" y="132" width="10" height="10" fill="none" stroke="rgba(236,234,226,.3)"></rect>
+              <rect x="54" y="133" width="96" height="8" fill="rgba(236,234,226,.26)"></rect>
+              <rect x="20" y="164" width="260" height="34" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="32" y="176" width="10" height="10" fill="none" stroke="rgba(236,234,226,.3)"></rect>
+              <rect x="54" y="177" width="140" height="8" fill="rgba(236,234,226,.26)"></rect>
+              <rect x="20" y="208" width="260" height="34" fill="none" stroke="rgba(236,234,226,.18)" stroke-dasharray="5 4"></rect>
+              <rect x="54" y="221" width="78" height="8" fill="rgba(236,234,226,.14)"></rect>
+              <path fill="none" d="M262 84 h8 M262 90 h8 M262 96 h8" stroke="rgba(236,234,226,.35)"></path>
+              <rect x="20" y="272" width="260" height="6" fill="rgba(236,234,226,.14)"></rect>
+              <rect x="20" y="272" width="112" height="6" fill="var(--ac, #C8F250)"></rect>
+              <rect x="20" y="292" width="150" height="7" fill="rgba(236,234,226,.24)"></rect>
+              <rect x="320" y="50" width="70" height="8" fill="rgba(236,234,226,.3)"></rect>
+              <rect x="320" y="76" width="220" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="94" width="170" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="112" width="200" height="7" fill="var(--ac, #C8F250)" opacity=".55"></rect>
+              <rect x="320" y="130" width="140" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="148" width="196" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="166" width="118" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="192" width="90" height="7" fill="#7FD1A0" opacity=".7"></rect>
+              <rect x="320" y="210" width="160" height="7" fill="rgba(236,234,226,.2)"></rect>
+              <rect x="320" y="236" width="60" height="7" fill="var(--ac, #C8F250)" opacity=".8"></rect>
+              <rect x="320" y="262" width="10" height="12" fill="rgba(236,234,226,.45)"></rect>
+              <rect x="344" y="264" width="80" height="7" fill="rgba(236,234,226,.24)"></rect>
+              <rect x="580" y="50" width="80" height="8" fill="rgba(236,234,226,.3)"></rect>
+              <rect x="580" y="76" width="200" height="112" fill="none" stroke="rgba(236,234,226,.18)"></rect>
+              <rect x="592" y="88" width="176" height="42" fill="rgba(236,234,226,.1)"></rect>
+              <rect x="592" y="140" width="120" height="8" fill="rgba(236,234,226,.18)"></rect>
+              <rect x="592" y="156" width="90" height="8" fill="rgba(236,234,226,.18)"></rect>
+              <rect x="580" y="204" width="200" height="86" fill="none" stroke="var(--ac, #C8F250)"></rect>
+              <rect x="592" y="216" width="176" height="34" fill="var(--ac, #C8F250)" opacity=".22"></rect>
+              <rect x="592" y="260" width="128" height="8" fill="var(--ac, #C8F250)" opacity=".4"></rect>
+              <rect x="592" y="274" width="76" height="8" fill="rgba(236,234,226,.18)"></rect>
+            </svg>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.42); margin-top: 16px;">Pentool — queue, agent and visual check in one window</div>
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #0C0C0D; background: var(--ac, #C8F250); padding: 5px 10px; font-weight: 500;">Product 02 · macOS app</span>
+          </div>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; letter-spacing: -.03em; font-size: clamp(34px, 4.4vw, 62px); line-height: .96; margin: 0 0 20px;">Pentool Desktop App</h3>
+          <p style="margin: 0 0 18px; font-size: 18px; color: rgba(236,234,226,.78); max-width: 46ch;">The bridge, the queue and Claude Code in one window. One click in Figma writes the design and its screenshots straight into the queue; the queue pane shows build order with drag-to-reorder.</p>
+          <p style="margin: 0 0 24px; color: rgba(236,234,226,.6); font-size: 15.5px; max-width: 46ch;">Progress is read from the files the pipeline writes — never scraped from agent output, so the dashboard cannot drift. The agent is the real <code style="font-family: 'JetBrains Mono', monospace;">claude</code> CLI, with your MCP servers and your permission prompts.</p>
+          <div style="display: grid; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: rgba(236,234,226,.6);">
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Your own Claude subscription</div>
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Progress read from files, never scraped</div>
+            <div style="display: flex; gap: 12px;"><span style="color: var(--ac, #C8F250);">→</span>Staging screenshot vs the design</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="webflow" style="border-bottom: 1px solid rgba(236,234,226,.13); background: #101012;">
+      <div style="padding: 72px 40px 44px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 56px; align-items: end;">
+        <div>
+          <div style="display: flex; align-items: baseline; gap: 22px; margin-bottom: 28px;"><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">05</span><span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.45);">Built for two platforms only</span></div>
+          <div style="display: flex; align-items: center; gap: 26px; margin-bottom: 30px; color: #ECEAE2;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 32 48" aria-label="Figma" style="display: block; width: 26px; height: auto;">
+              <path fill="#00B6FF" d="M16 23.059A7.06 7.06 0 0 1 23.06 16H24a8 8 0 1 1 0 16h-.941A7.06 7.06 0 0 1 16 24.941z"></path>
+              <path fill="#24CB71" d="M0 40a8 8 0 0 1 8-8h8v8a8 8 0 1 1-16 0"></path>
+              <path fill="#FF7237" d="M16 0v16h8a8 8 0 1 0 0-16z"></path>
+              <path fill="#FF3737" d="M0 8a8 8 0 0 0 8 8h8V0H8a8 8 0 0 0-8 8"></path>
+              <path fill="#874FFF" d="M0 24a8 8 0 0 0 8 8h8V16H8a8 8 0 0 0-8 8"></path>
+            </svg>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 18px; color: rgba(236,234,226,.4);">→</span>
+            <svg viewBox="0 0 108 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Webflow" style="display: block; width: 190px; height: auto;">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M28.8562 0.5L19.6486 18.5H11L14.8534 11.04H14.6805C11.5015 15.1668 6.7583 17.8835 0 18.5V11.1433C0 11.1433 4.32345 10.8879 6.86508 8.21575H0V0.500142H7.71561V6.84612L7.88878 6.84541L11.0417 0.500142H16.8768V6.80588L17.0499 6.8056L20.3211 0.5H28.8562Z" fill="#146EF5"></path>
+              <path d="M79.0662 16.5132H81.5511V2.25H79.0662V16.5132Z" fill="currentColor"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M65.3675 16.3675C65.9075 16.592 66.4567 16.7043 67.015 16.7043C67.9373 16.7043 68.7626 16.4798 69.4908 16.0307C70.2189 15.5817 70.7833 14.9628 71.1838 14.1739C71.5843 13.379 71.7845 12.4778 71.7845 11.4705C71.7845 10.4632 71.5782 9.56211 71.1656 8.76718C70.7529 7.97226 70.1795 7.35634 69.4452 6.91943C68.711 6.47646 67.8766 6.25801 66.9421 6.26407C66.3475 6.26407 65.7771 6.37937 65.2309 6.60996C64.6848 6.84055 64.2297 7.16823 63.8656 7.593C63.8375 7.62534 63.8102 7.658 63.7837 7.69099V2.2591H61.2897V16.5132H63.7655L63.7605 15.1816C63.8245 15.2601 63.893 15.3368 63.9657 15.4118C64.3601 15.8184 64.8274 16.1369 65.3675 16.3675ZM67.9161 14.0647C67.5095 14.3135 67.0453 14.4379 66.5234 14.4379C66.0076 14.4379 65.5343 14.3104 65.1035 14.0556C64.6726 13.7946 64.3298 13.4397 64.0749 12.9906C63.8261 12.5416 63.7017 12.0318 63.7017 11.4614C63.6957 10.891 63.817 10.3813 64.0658 9.93227C64.3207 9.47716 64.6635 9.1252 65.0944 8.87641C65.5252 8.62155 66.0016 8.49715 66.5234 8.50322C67.0453 8.49715 67.5095 8.61851 67.9161 8.86731C68.3287 9.11003 68.6442 9.45895 68.8627 9.91406C69.0872 10.3631 69.1995 10.8789 69.1995 11.4614C69.1995 12.044 69.0872 12.5598 68.8627 13.0088C68.6442 13.4579 68.3287 13.8098 67.9161 14.0647Z" fill="currentColor"></path>
+              <path d="M32.4562 3.11471H35.2961L37.8365 12.3923L40.539 3.11471H42.9056L45.8365 12.2061L48.2759 3.11471H50.8791L47.038 16.5132H44.5895L41.6091 7.63159L38.8733 16.5132H36.3975L32.4562 3.11471Z" fill="currentColor"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M55.0729 16.7498C54.0837 16.7559 53.1917 16.5374 52.3968 16.0945C51.6079 15.6454 50.986 15.0234 50.5308 14.2285C50.0818 13.4336 49.8573 12.5264 49.8573 11.5069C49.8573 10.5178 50.0879 9.62279 50.5491 8.8218C51.0102 8.0208 51.6352 7.39578 52.4241 6.94674C53.213 6.4977 54.0928 6.27318 55.0637 6.27318C56.156 6.27318 57.1117 6.5159 57.9309 7.00135C58.7562 7.4868 59.3721 8.17554 59.7787 9.06755C60.1913 9.9535 60.34 10.9699 60.2247 12.1168H52.428C52.4498 12.5737 52.5638 12.9894 52.77 13.3638C53.0006 13.7764 53.3222 14.098 53.7348 14.3286C54.1475 14.5592 54.6086 14.6745 55.1184 14.6745C55.5067 14.6684 55.8678 14.6017 56.2015 14.4743C56.5353 14.3408 56.8174 14.1618 57.048 13.9372C57.2847 13.7127 57.4516 13.4579 57.5487 13.1727H60.1519C59.9941 13.8705 59.6786 14.4925 59.2053 15.0386C58.7319 15.5787 58.1373 16.0004 57.4212 16.3038C56.7052 16.6072 55.9224 16.7559 55.0729 16.7498ZM52.7791 9.61369C52.6337 9.86727 52.5329 10.1403 52.4768 10.4329H57.6451C57.6076 10.0633 57.4935 9.72652 57.3029 9.42254C57.0844 9.06452 56.7871 8.78842 56.4109 8.59424C56.0347 8.39399 55.6099 8.29387 55.1366 8.29387C54.6329 8.29387 54.1748 8.40916 53.7621 8.63975C53.3495 8.87034 53.0218 9.19499 52.7791 9.61369Z" fill="currentColor"></path>
+              <path d="M73.6141 6.48253C73.6141 5.6694 73.7991 4.94729 74.1693 4.3162C74.5394 3.67905 75.0583 3.18449 75.7258 2.83254C76.3993 2.47452 77.1852 2.28944 78.0832 2.27731V4.48914C77.6645 4.49521 77.3065 4.5832 77.0092 4.75311C76.7179 4.91695 76.4934 5.15664 76.3356 5.47218C76.1904 5.76268 76.112 6.09946 76.1005 6.48253H78.0286V8.58514H76.099V16.5132H73.6141V8.58514H72.0121V6.48253H73.6141Z" fill="currentColor"></path>
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M87.868 16.7316C86.8546 16.7316 85.9474 16.5101 85.1464 16.0672C84.3515 15.6181 83.7265 14.9992 83.2714 14.2103C82.8223 13.4154 82.5978 12.5143 82.5978 11.5069C82.5978 10.4936 82.8223 9.58942 83.2714 8.79449C83.7265 7.99349 84.3515 7.37151 85.1464 6.92854C85.9474 6.48556 86.8546 6.26407 87.868 6.26407C88.8874 6.26407 89.7977 6.48556 90.5986 6.92854C91.4057 7.37151 92.0338 7.99046 92.4828 8.78539C92.9318 9.58031 93.1594 10.4875 93.1655 11.5069C93.1594 12.5143 92.9318 13.4154 92.4828 14.2103C92.0398 14.9992 91.4148 15.6181 90.6077 16.0672C89.8007 16.5101 88.8874 16.7316 87.868 16.7316ZM87.868 14.447C88.402 14.447 88.8753 14.3256 89.2879 14.0829C89.7006 13.8341 90.0191 13.4882 90.2437 13.0452C90.4682 12.5962 90.5804 12.0834 90.5804 11.5069C90.5804 10.9244 90.4682 10.4086 90.2437 9.95957C90.0191 9.51053 89.7006 9.16465 89.2879 8.92192C88.8753 8.67313 88.402 8.54873 87.868 8.54873C87.3401 8.54873 86.8698 8.67313 86.4571 8.92192C86.0506 9.16465 85.735 9.51053 85.5105 9.95957C85.286 10.4086 85.1768 10.9244 85.1828 11.5069C85.1828 12.0834 85.2951 12.5962 85.5196 13.0452C85.7502 13.4882 86.0657 13.8341 86.4662 14.0829C86.8728 14.3256 87.3401 14.447 87.868 14.447Z" fill="currentColor"></path>
+              <path d="M95.8506 6.48253H93.0836L96.0782 16.5132H98.4994L100.469 10.1066L102.595 16.5132H104.98L107.984 6.48253H105.481L103.777 12.726L101.894 6.48253H99.4733L97.5995 12.8635L95.8506 6.48253Z" fill="currentColor"></path>
+            </svg>
+          </div>
+          <p style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.8vw, 38px); line-height: 1.06; letter-spacing: -.03em; max-width: 26ch; text-wrap: pretty;">Every decision in here is shaped by what Webflow's API can and cannot do.</p>
+        </div>
+        <div style="display: grid; gap: 18px; color: rgba(236,234,226,.7); max-width: 56ch;">
+          <p style="margin: 0;">It builds through the official Webflow MCP — the same connection you already authorise — so classes, elements and CMS bindings are created the way the Designer would create them, on the site you already have.</p>
+          <p style="margin: 0;">And where the platform has no answer, it says so instead of improvising. Three missing endpoints explain almost every design decision in the product:</p>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-top: 1px solid rgba(236,234,226,.13);">
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #FF7A5C; margin-bottom: 12px;">No undo API</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">So it builds a single section, then stops and waits. A wrong class costs one section, not a whole page.</p>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #FF7A5C; margin-bottom: 12px;">No backups endpoint</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">So it asks you for a Designer restore point, and keeps a diffable snapshot of pages, styles and components instead of pretending it can restore one.</p>
+        </div>
+        <div style="border-bottom: 1px solid rgba(236,234,226,.13); padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #FF7A5C; margin-bottom: 12px;">No IX3 API</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">So captured prototype wiring comes back as a manual to-do list, never as an interaction it claims to have built.</p>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #146EF5; margin-bottom: 12px;">Official MCP</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">Elements, classes and CMS bindings written through Webflow's own MCP server, with your permission prompts in the loop.</p>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #146EF5; margin-bottom: 12px;">Client-First native</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">Client-First v2.1 or Relume v3.0, set in one code block rather than a settings screen. Classes come from the style guide you describe there, dimensions in rem, hairlines in px.</p>
+        </div>
+        <div style="padding: 28px 32px 32px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #146EF5; margin-bottom: 12px;">Staging, never live</div>
+          <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.72);">The visual check publishes to your <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em;">.webflow.io</code> subdomain. Going to production stays your click.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="does" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 80px 40px 40px; display: flex; align-items: baseline; gap: 22px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">06</span>
+        <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(28px, 3.6vw, 48px); line-height: 1.02; letter-spacing: -.03em; margin: 0;">Six things it does. All of them are built.</h2>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,1fr) minmax(0,.8fr); gap: 44px; align-items: center;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">01</div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Reads the design properly</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">Not pixels — structure. Tokens bound to spacing, padding, radius and colour. Component properties. Mixed-run typography. Prototype wiring. Auto-layout, including what Figma infers for hand-positioned frames.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">Variables resolve to their token names, not to hex values.</p>
+        </div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #101012; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <path fill="none" d="M20 26 v112 M20 40 h18 M20 72 h18 M20 104 h18 M20 136 h18" stroke="rgba(236,234,226,.28)"></path>
+            <rect x="38" y="30" width="86" height="20" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="38" y="62" width="86" height="20" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="38" y="94" width="86" height="20" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="38" y="126" width="86" height="20" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="46" y="37" width="52" height="6" fill="rgba(236,234,226,.18)"></rect>
+            <rect x="46" y="69" width="40" height="6" fill="rgba(236,234,226,.18)"></rect>
+            <rect x="46" y="101" width="60" height="6" fill="rgba(236,234,226,.18)"></rect>
+            <rect x="46" y="133" width="34" height="6" fill="rgba(236,234,226,.18)"></rect>
+            <path fill="none" d="M124 40 h22 M124 72 h22 M124 104 h22" stroke="var(--ac, #C8F250)" stroke-dasharray="3 3"></path>
+            <rect x="146" y="30" width="94" height="20" fill="none" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="146" y="62" width="94" height="20" fill="none" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="146" y="94" width="94" height="20" fill="none" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="154" y="37" width="62" height="6" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+            <rect x="154" y="69" width="48" height="6" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+            <rect x="154" y="101" width="70" height="6" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+          </svg>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,.8fr) minmax(0,1fr); gap: 44px; align-items: center; background: #101012;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">02</div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #0C0C0D; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="22" width="224" height="126" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <path fill="none" d="M18 46 h224" stroke="rgba(236,234,226,.28)"></path>
+            <rect x="28" y="30" width="60" height="7" fill="rgba(236,234,226,.2)"></rect>
+            <rect x="28" y="58" width="54" height="14" fill="none" stroke="#7FD1A0"></rect>
+            <rect x="34" y="62" width="42" height="6" fill="#7FD1A0" opacity=".6"></rect>
+            <rect x="94" y="58" width="118" height="14" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="28" y="82" width="54" height="14" fill="none" stroke="var(--ac, #C8F250)"></rect>
+            <rect x="34" y="86" width="30" height="6" fill="var(--ac, #C8F250)" opacity=".7"></rect>
+            <rect x="94" y="82" width="90" height="14" fill="var(--ac, #C8F250)" opacity=".18"></rect>
+            <rect x="94" y="102" width="140" height="6" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="94" y="114" width="112" height="6" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="28" y="126" width="54" height="14" fill="none" stroke="#7FD1A0"></rect>
+            <rect x="34" y="130" width="42" height="6" fill="#7FD1A0" opacity=".6"></rect>
+            <rect x="94" y="126" width="80" height="14" fill="rgba(236,234,226,.14)"></rect>
+          </svg>
+        </div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Uses the class names you already have</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">Class names checked against your real style guide — <code style="font-family: 'JetBrains Mono', monospace; font-size: .88em; color: #7FD1A0;">[existing]</code> when the class is already there, <code style="font-family: 'JetBrains Mono', monospace; font-size: .88em; color: var(--ac, #C8F250);">[new]</code> with the CSS to create it. Every dimension in rem, hairlines in px.</p>
+          <p style="margin: 0 0 12px; color: rgba(236,234,226,.55); font-size: 15px;">Your inventory — component list, class list, size scales — lives in one code block you edit. Describe a site there and <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em; color: #7FD1A0;">[existing]</code> starts meaning something for it.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">Nothing invented. Nothing hardcoded.</p>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,1fr) minmax(0,.8fr); gap: 44px; align-items: center;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">03</div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Knows what not to rebuild</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">Components you have already built come through as <em>reuse, do not rebuild</em>, so the agent places an instance instead of duplicating the markup.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">One master, three instances, no fourth copy.</p>
+        </div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #101012; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="52" width="72" height="66" fill="none" stroke="var(--ac, #C8F250)" stroke-width="1.5"></rect>
+            <rect x="28" y="62" width="52" height="24" fill="var(--ac, #C8F250)" opacity=".25"></rect>
+            <rect x="28" y="94" width="36" height="6" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+            <rect x="28" y="104" width="24" height="6" fill="var(--ac, #C8F250)" opacity=".3"></rect>
+            <path fill="none" d="M90 85 h30 M90 85 v-40 h30 M90 85 v40 h30" stroke="rgba(236,234,226,.28)"></path>
+            <rect x="120" y="26" width="60" height="38" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="128" y="34" width="44" height="14" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="120" y="66" width="60" height="38" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="128" y="74" width="44" height="14" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="120" y="106" width="60" height="38" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="128" y="114" width="44" height="14" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="196" y="66" width="46" height="38" fill="none" stroke="rgba(236,234,226,.28)" stroke-dasharray="4 3"></rect>
+            <path fill="none" d="M200 70 l38 30 M238 70 l-38 30" stroke="#FF7A5C" stroke-width="1.5"></path>
+          </svg>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,.8fr) minmax(0,1fr); gap: 44px; align-items: center; background: #101012;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">04</div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #0C0C0D; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="30" width="104" height="60" fill="rgba(236,234,226,.9)"></rect>
+            <rect x="30" y="48" width="66" height="8" fill="#0C0C0D"></rect>
+            <rect x="30" y="64" width="46" height="8" fill="rgba(12,12,13,.55)"></rect>
+            <rect x="18" y="98" width="104" height="20" fill="none" stroke="#7FD1A0"></rect>
+            <rect x="24" y="104" width="52" height="8" fill="#7FD1A0" opacity=".6"></rect>
+            <circle cx="110" cy="108" r="5" fill="#7FD1A0"></circle>
+            <rect x="146" y="30" width="44" height="40" fill="none" stroke="#FF7A5C" stroke-width="1.5" stroke-dasharray="4 3"></rect>
+            <rect x="160" y="42" width="16" height="16" fill="#FF7A5C" opacity=".5"></rect>
+            <path fill="none" d="M146 80 h44 M146 76 v8 M190 76 v8" stroke="rgba(236,234,226,.28)"></path>
+            <rect x="146" y="98" width="96" height="20" fill="none" stroke="#FF7A5C"></rect>
+            <rect x="152" y="104" width="40" height="8" fill="#FF7A5C" opacity=".35"></rect>
+            <path fill="none" d="M222 102 l10 12 M232 102 l-10 12" stroke="#FF7A5C" stroke-width="1.5"></path>
+            <rect x="200" y="34" width="42" height="32" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="206" y="42" width="30" height="6" fill="rgba(236,234,226,.16)"></rect>
+            <rect x="206" y="52" width="18" height="6" fill="rgba(236,234,226,.16)"></rect>
+          </svg>
+        </div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Checks accessibility as it goes</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">It has the text colour and the background in hand at the same time, so it works out the contrast ratio itself instead of asking you to. Plus missing alt text, icon-only buttons with no accessible name, tap targets under 44×44, and skipped heading levels.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">Contrast computed, not flagged for a human.</p>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,1fr) minmax(0,.8fr); gap: 44px; align-items: center;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">05</div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Builds one section at a time</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">Then it stops and waits. Webflow has no undo API, so a wrong class costs one section, not a whole page.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">It stops on its own. You say when to carry on.</p>
+        </div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #101012; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="60" y="18" width="140" height="134" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="60" y="18" width="140" height="26" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="60" y="44" width="140" height="34" fill="var(--ac, #C8F250)" opacity=".85"></rect>
+            <path fill="none" d="M52 78 h156" stroke="var(--ac, #C8F250)" stroke-width="2"></path>
+            <circle cx="52" cy="78" r="4" fill="var(--ac, #C8F250)"></circle>
+            <rect x="70" y="92" width="120" height="10" fill="none" stroke="rgba(236,234,226,.24)" stroke-dasharray="4 4"></rect>
+            <rect x="70" y="110" width="120" height="10" fill="none" stroke="rgba(236,234,226,.24)" stroke-dasharray="4 4"></rect>
+            <rect x="70" y="128" width="80" height="10" fill="none" stroke="rgba(236,234,226,.24)" stroke-dasharray="4 4"></rect>
+          </svg>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 44px 40px; display: grid; grid-template-columns: 84px minmax(0,.8fr) minmax(0,1fr); gap: 44px; align-items: center; background: #101012;">
+        <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 40px; letter-spacing: -.04em; color: rgba(236,234,226,.18);">06</div>
+        <div style="border: 1px solid rgba(236,234,226,.14); background: #0C0C0D; padding: 18px;">
+          <svg width="100%" height="150" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="16" y="26" width="100" height="118" fill="none" stroke="rgba(236,234,226,.28)"></rect>
+            <rect x="26" y="38" width="80" height="30" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="26" y="78" width="52" height="8" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="26" y="92" width="66" height="8" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="26" y="114" width="40" height="16" fill="rgba(236,234,226,.14)"></rect>
+            <rect x="144" y="26" width="100" height="118" fill="none" stroke="var(--ac, #C8F250)" stroke-width="1.5"></rect>
+            <rect x="154" y="38" width="80" height="30" fill="var(--ac, #C8F250)" opacity=".2"></rect>
+            <rect x="154" y="78" width="52" height="8" fill="var(--ac, #C8F250)" opacity=".2"></rect>
+            <rect x="154" y="92" width="72" height="8" fill="var(--ac, #C8F250)" opacity=".5"></rect>
+            <rect x="154" y="114" width="46" height="16" fill="var(--ac, #C8F250)" opacity=".2"></rect>
+            <path fill="none" d="M126 86 h8 M130 82 v8" stroke="rgba(236,234,226,.3)"></path>
+            <path fill="none" d="M240 96 l10 -10" stroke="var(--ac, #C8F250)" stroke-width="1.5"></path>
+            <circle cx="254" cy="82" r="4" fill="none" stroke="var(--ac, #C8F250)" stroke-width="1.5"></circle>
+          </svg>
+        </div>
+        <div style="max-width: 52ch;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: clamp(24px, 2.6vw, 32px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 14px;">Checks its own work</h3>
+          <p style="margin: 0 0 16px; color: rgba(236,234,226,.7);">After building, it publishes to staging, screenshots the live page, and compares it with the Figma export. The comparison needs the plugin's preview-PNG option switched on — it is off by default, so you opt into it per capture.</p>
+          <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ac, #C8F250);">Staging only. Differences listed, side by side.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="knowing" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 80px 40px 40px; display: flex; align-items: baseline; gap: 22px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">07</span>
+        <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(28px, 3.6vw, 48px); line-height: 1.02; letter-spacing: -.03em; margin: 0;">Worth knowing.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); border-top: 1px solid rgba(236,234,226,.13);">
+        <div style="border-right: 1px solid rgba(236,234,226,.13); border-bottom: 1px solid rgba(236,234,226,.13); padding: 32px 40px 36px;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: -.02em; margin: 0 0 10px;">It uses your Claude subscription</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">Not an API key, not separate billing. The app spawns the CLI you already have — so your Webflow connection, your skills and your settings come with it.</p>
+        </div>
+        <div style="border-bottom: 1px solid rgba(236,234,226,.13); padding: 32px 40px 36px;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: -.02em; margin: 0 0 10px;">Nothing is published without you</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">The visual check publishes to the <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em; color: var(--ac, #C8F250);">.webflow.io</code> staging subdomain only. Going live is never automated.</p>
+        </div>
+        <div style="border-right: 1px solid rgba(236,234,226,.13); padding: 32px 40px 36px;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: -.02em; margin: 0 0 10px;">Every session takes a snapshot first</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">A structural record of pages, styles, components and element trees, so you can diff exactly what a build changed.</p>
+        </div>
+        <div style="padding: 32px 40px 36px;">
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 22px; letter-spacing: -.02em; margin: 0 0 10px;">It refuses rather than guesses</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">A missing MCP tool, an unresolvable class, a page that does not exist — each is a stop with a reason, not a best effort.</p>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ showLimits }}" hint-placeholder-val="{{ true }}">
+    <section id="limits" style="border-bottom: 1px solid rgba(236,234,226,.13); background: #101012;">
+      <div style="padding: 80px 40px 40px; display: flex; align-items: baseline; justify-content: space-between; gap: 32px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: baseline; gap: 22px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: #FF7A5C;">08</span>
+          <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(28px, 3.6vw, 48px); line-height: 1.02; letter-spacing: -.03em; margin: 0;">Honest limits.</h2>
+        </div>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: rgba(236,234,226,.45);">Seven things it does not do. Read them before you install it.</span>
+      </div>
+      <div style="border-top: 1px solid rgba(236,234,226,.13);">
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—01</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">It has not built a live site yet</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">The whole path is written, validated and tested end to end, but nothing here has run against the live Webflow API — no class creation, no asset upload, no element insertion. There is no sites-built number on this page because there is no honest one.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—02</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">Your style guide has to be described first</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">It knows the class list you gave it, not Webflow's universe of classes. The shipped inventory is one specific style guide; another site needs its own before <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em;">[existing]</code> means anything.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—03</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">A snapshot is not a backup</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">Webflow's API has no backups endpoint, so nothing here can restore a site. The snapshot is a diffable record; the recoverable backup is Webflow's own restore point, which you create in the Designer. pentool.studio asks for one and writes down whether you said yes.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—04</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">Interactions cannot be automated</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">The plugin captures your prototype wiring, but neither Webflow's MCP nor its Data or Designer API can create IX3 interactions. Hover and click states are logged as a manual to-do.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—05</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">One agent per project</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">Projects run in parallel safely. Two agents on one site would race on class creation and element insertion, which Webflow has neither transactions nor undo for.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px; border-bottom: 1px solid rgba(236,234,226,.13);">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—06</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">It cannot write your alt text</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">It knows an image needs one; it does not know what the image means.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 84px minmax(0,.7fr) minmax(0,1.3fr); gap: 40px; padding: 26px 40px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FF7A5C;">L—07</span>
+          <h3 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: -.02em; margin: 0;">Class names are proposals</h3>
+          <p style="margin: 0; color: rgba(236,234,226,.68); font-size: 15.5px;">Derived from your Figma layer names, and marked <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em; color: var(--ac, #C8F250);">[name inferred]</code> when the layer was called <code style="font-family: 'JetBrains Mono', monospace; font-size: .9em;">Frame 7</code> and the name had to come from structure instead.</p>
+        </div>
+      </div>
+    </section>
+    </sc-if>
+
+    <section id="facts" style="border-bottom: 1px solid rgba(236,234,226,.13);">
+      <div style="padding: 72px 40px 36px; display: flex; align-items: baseline; gap: 22px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">09</span>
+        <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(24px, 2.8vw, 36px); line-height: 1.02; letter-spacing: -.03em; margin: 0;">The facts.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: minmax(0,1fr); border-top: 1px solid rgba(236,234,226,.13); font-family: 'JetBrains Mono', monospace; font-size: 13.5px;">
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Figma plan</span><span>Free — runs in Design mode</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Design system</span><span>Client-First v2.1 / Relume v3.0 — set in one code block</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Build target</span><span>Webflow, via the official MCP</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">AI</span><span>Your existing Claude subscription</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Publishing</span><span>Staging subdomain only, never production</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Platform</span><span>App: macOS arm64, ad-hoc signed. Plugin &amp; pipeline: anywhere Node runs</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px; border-bottom: 1px solid rgba(236,234,226,.13);"><span style="color: rgba(236,234,226,.42);">Dependencies</span><span>Plugin &amp; pipeline: none. App: Electron</span></div>
+        <div style="display: grid; grid-template-columns: minmax(140px, 22%) minmax(0,1fr); gap: 32px; padding: 16px 40px;"><span style="color: rgba(236,234,226,.42);">Tests</span><span>254 — 81 plugin · 156 pipeline · 17 end-to-end</span></div>
+      </div>
+    </section>
+
+    <section id="now" style="background-image: linear-gradient(rgba(236,234,226,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(236,234,226,.045) 1px, transparent 1px); background-size: 92px 92px;">
+      <div style="padding: 96px 40px 72px;">
+        <div style="display: flex; align-items: baseline; gap: 22px; margin-bottom: 28px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: var(--ac, #C8F250);">10</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(236,234,226,.45);">Where it is now</span>
+        </div>
+        <h2 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: clamp(38px, 6vw, 84px); line-height: .96; letter-spacing: -.035em; margin: 0 0 24px; max-width: 20ch; text-wrap: pretty;">Being tested by developers. Launching soon.</h2>
+        <p style="margin: 0 0 44px; color: rgba(236,234,226,.7); font-size: 18px; max-width: 54ch;">It works end to end and other developers are testing it now. What it has not done yet is touch a live Webflow site — that gap is the next thing to close, and it is on this page rather than hidden.</p>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border: 1px solid rgba(236,234,226,.16); margin-bottom: 40px; background: #101012;">
+          <div style="border-right: 1px solid rgba(236,234,226,.16); padding: 26px 24px 30px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 14px;">In testing now</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.7);">The plugin, the queue and the desktop app, running end to end against real designs. 254 tests: 81 plugin, 156 pipeline, 17 end-to-end.</p>
+          </div>
+          <div style="border-right: 1px solid rgba(236,234,226,.16); padding: 26px 24px 30px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 14px;">What testers get</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.7);">A build of the macOS app and the Figma plugin, and a direct line for the things that break. You bring your own Claude subscription and your own style guide.</p>
+          </div>
+          <div style="padding: 26px 24px 30px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac, #C8F250); margin-bottom: 14px;">What we ask</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(236,234,226,.7);">Run it on one real page and say where it stopped, guessed, or wasted your time. That is the whole deal.</p>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <a href="#now" style="padding: 16px 26px; background: var(--ac, #C8F250); color: #0C0C0D; font-weight: 600; white-space: nowrap;" style-hover="background: #ECEAE2;">Ask for a test build</a>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; padding: 15px 20px; border: 1px solid rgba(236,234,226,.22); white-space: nowrap;">hello@pentool.studio</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: rgba(236,234,226,.45); white-space: nowrap;">Open source at launch</span>
+        </div>
+      </div>
+      <div style="border-top: 1px solid rgba(236,234,226,.13); padding: 26px 40px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: rgba(236,234,226,.45);">
+        <span>pentool.studio — Figma plugin and macOS app · in private testing</span>
+        <span>Not a design-to-code exporter</span>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#FF7A5C&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C8F250&quot;,&quot;#7CE0F0&quot;,&quot;#F5B942&quot;,&quot;#FF7A5C&quot;],&quot;section&quot;:&quot;Theme&quot;},&quot;showLimits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Content&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      accent: this.props.accent ?? '#C8F250',
+      showLimits: this.props.showLimits ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

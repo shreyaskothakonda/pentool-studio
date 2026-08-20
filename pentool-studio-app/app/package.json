@@ -1,0 +1,109 @@
+{
+  "name": "pentool",
+  "productName": "Pentool",
+  "version": "0.1.0",
+  "description": "Build Figma designs into Webflow, with Claude Code inside",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "rebuild": "electron-rebuild -f -w node-pty",
+    "postinstall": "electron-rebuild -f -w node-pty",
+    "build": "./build-mac.sh",
+    "build:app": "./build-mac.sh --no-dmg",
+    "release": "./release.sh",
+    "test": "node test.js"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.1",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "node-pty": "^1.0.0"
+  },
+  "allowScripts": {
+    "electron@34.5.8": true,
+    "node-pty@1.1.0": true
+  },
+  "build": {
+    "appId": "studio.pentool.app",
+    "productName": "Pentool",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "update.js",
+      "renderer/**/*",
+      "node_modules/**/*",
+      "!node_modules/**/{test,tests,__tests__,example,examples,doc,docs}/**",
+      "!node_modules/**/*.{md,markdown,map,ts,tsx,flow}",
+      "!node_modules/**/{.eslintrc,.editorconfig,.npmignore,.travis.yml,tsconfig.json}",
+      "!node_modules/@xterm/*/src/**",
+      "!node_modules/node-pty/prebuilds/win32-*/**",
+      "!node_modules/node-pty/prebuilds/darwin-x64/**",
+      "!node_modules/node-pty/{src,scripts,typings,binding.gyp,tsconfig.json}",
+      "!node_modules/node-pty/build/**/*.{o,a,d,mk,gypi,Makefile}",
+      "!node_modules/node-pty/build/{Release/obj,Release/obj.target,deps}/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../lib",
+        "to": "lib"
+      },
+      {
+        "from": "../bin",
+        "to": "bin"
+      },
+      {
+        "from": "../.claude/skills",
+        "to": ".claude/skills"
+      }
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": null
+    },
+    "dmg": {
+      "title": "Pentool ${version}",
+      "artifactName": "Pentool-${version}-arm64.dmg",
+      "contents": [
+        {
+          "x": 140,
+          "y": 190,
+          "type": "file"
+        },
+        {
+          "x": 400,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    }
+  },
+  "author": "Shreyas Kothakonda"
+}

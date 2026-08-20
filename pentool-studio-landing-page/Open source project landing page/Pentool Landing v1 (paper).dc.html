@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pentool — Figma to Webflow, in your own design system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; background: #F2EFE8; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1A1814; text-decoration-color: rgba(26,24,20,.3); text-underline-offset: 3px; }
+  a:hover { color: var(--accent, #C0431C); text-decoration-color: var(--accent, #C0431C); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div style="--accent: {{ accent }}; background: #F2EFE8; color: #1A1814; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 17px; line-height: 1.55; min-height: 100vh;">
+
+  <header style="position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 40px; background: rgba(242,239,232,.86); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="display: flex; align-items: baseline; gap: 12px;">
+      <span style="font-family: 'Instrument Serif', serif; font-size: 26px; letter-spacing: -.01em;">pentool.studio</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5);">Figma → Webflow</span>
+    </div>
+    <nav style="display: flex; align-items: center; gap: 28px; font-size: 14px;">
+      <a href="#loop" style="text-decoration: none;">How it works</a>
+      <a href="#how" style="text-decoration: none;">What it does</a>
+      <a href="#limits" style="text-decoration: none;">Limits</a>
+      <a href="#get" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; background: #1A1814; color: #F2EFE8; border-radius: 2px; text-decoration: none; font-weight: 500;">Ask for a test build</a>
+    </nav>
+  </header>
+
+  <section style="position: relative; overflow: hidden; border-bottom: 1px solid rgba(26,24,20,.12); background-image: linear-gradient(rgba(26,24,20,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(26,24,20,.055) 1px, transparent 1px); background-size: 64px 64px;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 96px 40px 84px; display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); gap: 64px; align-items: end; animation: riseIn .7s cubic-bezier(.2,.7,.3,1) both;">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent, #C0431C); margin-bottom: 28px;">
+          <span style="width: 22px; height: 1px; background: var(--accent, #C0431C); display: inline-block;"></span>In private testing · macOS · open source
+        </div>
+        <h1 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(48px, 6.4vw, 88px); line-height: .98; letter-spacing: -.022em; margin: 0 0 28px; text-wrap: pretty;">An AI workflow that turns Figma designs into <em style="font-style: italic; color: var(--accent, #C0431C);">your</em> Webflow site.</h1>
+        <p style="font-size: 20px; line-height: 1.5; max-width: 46ch; margin: 0 0 36px; color: rgba(26,24,20,.78); text-wrap: pretty;">pentool.studio reads your design with its tokens, component structure and prototype wiring intact, suggests class names from your own style guide, checks contrast and alt text as it goes — and builds one section at a time, so you can look at each one before it carries on.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <a href="#get" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; background: #1A1814; color: #F2EFE8; text-decoration: none; border-radius: 2px; font-weight: 500;">Ask for a test build</a>
+          <a href="#loop" style="display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border: 1px solid rgba(26,24,20,.3); text-decoration: none; border-radius: 2px;">See how it works</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(26,24,20,.55);">Launching soon · uses your Claude subscription</span>
+        </div>
+      </div>
+      <div style="background: #14120F; color: #E8E3D8; border-radius: 3px; padding: 22px 24px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; line-height: 1.75; box-shadow: 0 26px 60px -30px rgba(20,18,15,.7); overflow-x: auto;">
+        <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+          <span style="width: 9px; height: 9px; border-radius: 50%; background: rgba(232,227,216,.25);"></span>
+          <span style="width: 9px; height: 9px; border-radius: 50%; background: rgba(232,227,216,.25);"></span>
+          <span style="width: 9px; height: 9px; border-radius: 50%; background: rgba(232,227,216,.25);"></span>
+          <span style="margin-left: 10px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(232,227,216,.45);">section 03 · market-card-grid</span>
+        </div>
+        <div style="white-space: pre; color: #E8E3D8;"><span style="color: #E0A85C;">REUSE</span> component "market-card" — do not rebuild
+<span style="color: #8FB98A;">[existing]</span>  .section_market
+<span style="color: #E88C6A;">[new]</span>       .market-grid
+             display: grid;
+             grid-template-columns: repeat(3, 1fr);
+             gap: 1.5rem;
+<span style="color: #8FB98A;">[existing]</span>  .heading-style-h3   <span style="color: rgba(232,227,216,.5);">(name inferred)</span>
+
+<span style="color: rgba(232,227,216,.5);">audit</span>
+  contrast   #6B7280 on #F7F7F5 · 4.83:1  <span style="color: #8FB98A;">PASS</span>
+  tap target 40×40                        <span style="color: #E88C6A;">FAIL</span> min 44
+  alt text   card-thumb.jpg               <span style="color: #E88C6A;">MISSING</span>
+
+<span style="color: #E0A85C;">stopped.</span> awaiting review before section 04</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="loop" style="background: #14120F; color: #E8E3D8;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; margin-bottom: 48px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(232,227,216,.45); padding-top: 10px;">01 — How it works</div>
+        <h2 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(32px, 3.6vw, 46px); line-height: 1.1; letter-spacing: -.02em; margin: 0; max-width: 24ch;">Five steps, and it stops after each one.</h2>
+      </div>
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(232,227,216,.45); padding-top: 6px;">The loop</div>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 1px; background: rgba(232,227,216,.18); border: 1px solid rgba(232,227,216,.18);">
+          <div style="background: #14120F; padding: 22px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+            <svg width="100%" height="96" viewBox="0 0 112 96" preserveAspectRatio="xMidYMid meet" style="display: block;">
+              <rect x="8" y="10" width="96" height="76" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <rect x="8" y="10" width="96" height="14" fill="rgba(232,227,216,.12)"></rect>
+              <rect x="18" y="34" width="76" height="18" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <rect x="18" y="58" width="76" height="18" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="1.5" stroke-dasharray="4 3"></rect>
+              <rect x="15" y="55" width="6" height="6" fill="var(--accent, #E88C6A)"></rect>
+              <rect x="91" y="55" width="6" height="6" fill="var(--accent, #E88C6A)"></rect>
+              <rect x="15" y="73" width="6" height="6" fill="var(--accent, #E88C6A)"></rect>
+              <rect x="91" y="73" width="6" height="6" fill="var(--accent, #E88C6A)"></rect>
+            </svg>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-bottom: 10px;">Figma</div>
+              <div style="font-size: 15px; color: rgba(232,227,216,.8);">Select a section, press Capture.</div>
+            </div>
+          </div>
+          <div style="background: #14120F; padding: 22px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+            <svg width="100%" height="96" viewBox="0 0 112 96" preserveAspectRatio="xMidYMid meet" style="display: block;">
+              <rect x="8" y="12" width="96" height="16" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="1.5"></rect>
+              <circle cx="19" cy="20" r="3" fill="var(--accent, #E88C6A)"></circle>
+              <rect x="28" y="17" width="52" height="6" fill="rgba(232,227,216,.35)"></rect>
+              <rect x="8" y="34" width="96" height="16" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <circle cx="19" cy="42" r="3" fill="none" stroke="rgba(232,227,216,.4)" stroke-width="1"></circle>
+              <rect x="28" y="39" width="42" height="6" fill="rgba(232,227,216,.22)"></rect>
+              <rect x="8" y="56" width="96" height="16" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <circle cx="19" cy="64" r="3" fill="none" stroke="rgba(232,227,216,.4)" stroke-width="1"></circle>
+              <rect x="28" y="61" width="58" height="6" fill="rgba(232,227,216,.22)"></rect>
+            </svg>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-bottom: 10px;">Queue</div>
+              <div style="font-size: 15px; color: rgba(232,227,216,.8);">It lands in the queue, checked, in build order.</div>
+            </div>
+          </div>
+          <div style="background: #14120F; padding: 22px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+            <svg width="100%" height="96" viewBox="0 0 112 96" preserveAspectRatio="xMidYMid meet" style="display: block;">
+              <rect x="8" y="10" width="96" height="76" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <rect x="8" y="10" width="96" height="24" fill="rgba(232,227,216,.28)"></rect>
+              <rect x="8" y="34" width="96" height="20" fill="var(--accent, #E88C6A)" opacity=".85"></rect>
+              <rect x="8" y="54" width="96" height="1" fill="rgba(232,227,216,.3)"></rect>
+              <path fill="none" d="M14 66 h84 M14 76 h60" stroke="rgba(232,227,216,.16)" stroke-width="6" stroke-dasharray="2 6"></path>
+            </svg>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-bottom: 10px;">Build</div>
+              <div style="font-size: 15px; color: rgba(232,227,216,.8);">One section, then it stops.</div>
+            </div>
+          </div>
+          <div style="background: #14120F; padding: 22px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+            <svg width="100%" height="96" viewBox="0 0 112 96" preserveAspectRatio="xMidYMid meet" style="display: block;">
+              <rect x="6" y="14" width="66" height="56" fill="none" stroke="rgba(232,227,216,.3)" stroke-width="1"></rect>
+              <rect x="16" y="26" width="46" height="8" fill="rgba(232,227,216,.22)"></rect>
+              <rect x="16" y="40" width="30" height="8" fill="rgba(232,227,216,.22)"></rect>
+              <rect x="34" y="30" width="66" height="56" fill="#14120F" stroke="var(--accent, #E88C6A)" stroke-width="1.5"></rect>
+              <rect x="44" y="42" width="46" height="8" fill="var(--accent, #E88C6A)" opacity=".55"></rect>
+              <rect x="44" y="56" width="36" height="8" fill="var(--accent, #E88C6A)" opacity=".3"></rect>
+              <path d="M84 70 l4 5 l8 -11" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="2"></path>
+            </svg>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-bottom: 10px;">Check</div>
+              <div style="font-size: 15px; color: rgba(232,227,216,.8);">The built page, screenshotted next to the design.</div>
+            </div>
+          </div>
+          <div style="background: #14120F; padding: 22px 20px 26px; display: flex; flex-direction: column; gap: 16px;">
+            <svg width="100%" height="96" viewBox="0 0 112 96" preserveAspectRatio="xMidYMid meet" style="display: block;">
+              <path d="M56 20 a28 28 0 1 1 -26 18" fill="none" stroke="rgba(232,227,216,.35)" stroke-width="1.5"></path>
+              <path d="M50 12 L58 20 L50 28" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="2"></path>
+              <rect x="40" y="42" width="32" height="6" fill="var(--accent, #E88C6A)" opacity=".8"></rect>
+              <rect x="40" y="52" width="20" height="6" fill="rgba(232,227,216,.25)"></rect>
+            </svg>
+            <div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-bottom: 10px;">Continue</div>
+              <div style="font-size: 15px; color: rgba(232,227,216,.8);">Next section.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">02 — Why</div>
+      <div style="max-width: 62ch;">
+        <p style="font-family: 'Instrument Serif', serif; font-size: clamp(28px, 3.2vw, 40px); line-height: 1.22; letter-spacing: -.015em; margin: 0 0 28px; text-wrap: pretty;">Handing a Figma file to a developer, or to an AI, loses almost everything that made it a design.</p>
+        <div style="display: grid; gap: 18px; color: rgba(26,24,20,.78);">
+          <p style="margin: 0;">A screenshot loses the tokens. A code export loses the component structure. Figma's own MCP server hit a Starter-plan ceiling mid-project and stopped working. And the usual AI answer — paste a screenshot and hope — gives you hardcoded hex values, invented class names, and markup that ignores the design system the site is built on.</p>
+          <p style="margin: 0;">Meanwhile the knowledge that makes a rebuild correct lives nowhere durable: which components already exist, which classes are in the style guide, that <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em; background: rgba(26,24,20,.07); padding: 2px 5px; border-radius: 2px;">set_text</code> silently does nothing on a DivBlock. It lives in the head of whoever built the site last, and it gets rediscovered every time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; align-items: start;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">03 — What it is not</div>
+      <div>
+        <p style="font-family: 'Instrument Serif', serif; font-size: clamp(26px, 3vw, 38px); line-height: 1.25; letter-spacing: -.015em; margin: 0 0 24px; max-width: 30ch; text-wrap: pretty;">It is not a design-to-code exporter. Those hand you a pile of markup you then have to bend back into your own system.</p>
+        <p style="margin: 0 0 32px; color: rgba(26,24,20,.78); max-width: 62ch;">pentool.studio works the other way round. It starts from what you already built — your classes, your components, your tokens — and writes the design in those terms. What comes out is not a new site. It is instructions for adding to yours.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces" style="background: #14120F; color: #E8E3D8;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 96px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; margin-bottom: 64px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(232,227,216,.45); padding-top: 10px;">04 — The three pieces</div>
+        <h2 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(32px, 3.6vw, 46px); line-height: 1.1; letter-spacing: -.02em; margin: 0; max-width: 22ch;">A plugin, a queue you can read, and a desktop app.</h2>
+      </div>
+      <div style="display: grid; gap: 0;">
+        <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.8fr); gap: 56px; padding: 40px 0; border-top: 1px solid rgba(232,227,216,.18);">
+          <div>
+            <div style="font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1.1;">Pentool Studio</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-top: 8px;">Figma plugin</div>
+          </div>
+          <p style="margin: 0; color: rgba(232,227,216,.8);">A local plugin. No build step, no dependencies, no server. It runs in Design mode, which is why it works on a free Figma plan when Dev Mode does not.</p>
+          <p style="margin: 0; color: rgba(232,227,216,.6); font-size: 15.5px;">Select a frame, press <strong style="color: #E8E3D8; font-weight: 500;">Capture</strong>: it walks the tree resolving variables to token names, reading component props, segmenting mixed text, deduplicating icons and computing contrast as it goes.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.8fr); gap: 56px; padding: 40px 0; border-top: 1px solid rgba(232,227,216,.18);">
+          <div>
+            <div style="font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1.1;">The pipeline</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-top: 8px;">A queue you can read</div>
+          </div>
+          <p style="margin: 0; color: rgba(232,227,216,.8);">Sections land in a folder. A page manifest lists them in build order. Each section declares how it should be built: static markup, or a component with typed props, optionally bound to a CMS collection.</p>
+          <p style="margin: 0; color: rgba(232,227,216,.6); font-size: 15.5px;">Before anything touches Webflow, the whole queue is resolved and a typo stops it dead. Catching that costs nothing. Catching it mid-build means half a page is already written.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.8fr); gap: 56px; padding: 40px 0; border-top: 1px solid rgba(232,227,216,.18); border-bottom: 1px solid rgba(232,227,216,.18);">
+          <div>
+            <div style="font-family: 'Instrument Serif', serif; font-size: 30px; line-height: 1.1;">Pentool</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #E88C6A); margin-top: 8px;">Desktop app</div>
+          </div>
+          <p style="margin: 0; color: rgba(232,227,216,.8);">The bridge, the queue and Claude Code in one window. One click in Figma writes the design and its screenshots straight into the queue; the queue pane shows build order with drag-to-reorder.</p>
+          <p style="margin: 0 0 28px; color: rgba(232,227,216,.6); font-size: 15.5px;">Progress is read from the files the pipeline writes — never scraped from agent output, so the dashboard cannot drift. The agent is the real <code style="font-family: 'IBM Plex Mono', monospace;">claude</code> CLI in a terminal, with your MCP servers and your permission prompts.</p>
+        </div>
+      </div>
+
+      <div style="margin-top: 64px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(232,227,216,.45); padding-top: 6px;">The app window</div>
+        <div style="border: 1px solid rgba(232,227,216,.22); background: #0E0D0B; padding: 18px;">
+          <svg width="100%" height="330" viewBox="0 0 800 330" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="0.5" y="0.5" width="799" height="329" fill="#14120F" stroke="rgba(232,227,216,.28)"></rect>
+            <rect x="0.5" y="0.5" width="799" height="32" fill="rgba(232,227,216,.06)" stroke="rgba(232,227,216,.28)"></rect>
+            <circle cx="20" cy="16" r="4.5" fill="rgba(232,227,216,.3)"></circle>
+            <circle cx="36" cy="16" r="4.5" fill="rgba(232,227,216,.3)"></circle>
+            <circle cx="52" cy="16" r="4.5" fill="rgba(232,227,216,.3)"></circle>
+            <rect x="360" y="12" width="90" height="8" fill="rgba(232,227,216,.28)"></rect>
+            <path fill="none" d="M300 32 V330 M560 32 V330" stroke="rgba(232,227,216,.22)"></path>
+            <rect x="20" y="50" width="86" height="8" fill="rgba(232,227,216,.35)"></rect>
+            <rect x="20" y="76" width="260" height="34" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="1.5"></rect>
+            <rect x="32" y="88" width="10" height="10" fill="var(--accent, #E88C6A)"></rect>
+            <rect x="54" y="89" width="120" height="8" fill="rgba(232,227,216,.55)"></rect>
+            <rect x="214" y="89" width="54" height="8" fill="var(--accent, #E88C6A)" opacity=".5"></rect>
+            <rect x="20" y="120" width="260" height="34" fill="none" stroke="rgba(232,227,216,.22)"></rect>
+            <rect x="32" y="132" width="10" height="10" fill="none" stroke="rgba(232,227,216,.35)"></rect>
+            <rect x="54" y="133" width="96" height="8" fill="rgba(232,227,216,.3)"></rect>
+            <rect x="20" y="164" width="260" height="34" fill="none" stroke="rgba(232,227,216,.22)"></rect>
+            <rect x="32" y="176" width="10" height="10" fill="none" stroke="rgba(232,227,216,.35)"></rect>
+            <rect x="54" y="177" width="140" height="8" fill="rgba(232,227,216,.3)"></rect>
+            <rect x="20" y="208" width="260" height="34" fill="none" stroke="rgba(232,227,216,.22)" stroke-dasharray="5 4"></rect>
+            <rect x="54" y="221" width="78" height="8" fill="rgba(232,227,216,.18)"></rect>
+            <path fill="none" d="M262 84 h8 M262 90 h8 M262 96 h8" stroke="rgba(232,227,216,.4)"></path>
+            <rect x="20" y="272" width="260" height="6" fill="rgba(232,227,216,.16)"></rect>
+            <rect x="20" y="272" width="112" height="6" fill="var(--accent, #E88C6A)"></rect>
+            <rect x="20" y="292" width="150" height="7" fill="rgba(232,227,216,.28)"></rect>
+            <rect x="320" y="50" width="70" height="8" fill="rgba(232,227,216,.35)"></rect>
+            <rect x="320" y="76" width="220" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="94" width="170" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="112" width="200" height="7" fill="var(--accent, #E88C6A)" opacity=".55"></rect>
+            <rect x="320" y="130" width="140" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="148" width="196" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="166" width="118" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="192" width="90" height="7" fill="#8FB98A" opacity=".7"></rect>
+            <rect x="320" y="210" width="160" height="7" fill="rgba(232,227,216,.22)"></rect>
+            <rect x="320" y="236" width="60" height="7" fill="var(--accent, #E88C6A)" opacity=".8"></rect>
+            <rect x="320" y="262" width="10" height="12" fill="rgba(232,227,216,.5)"></rect>
+            <rect x="344" y="264" width="80" height="7" fill="rgba(232,227,216,.28)"></rect>
+            <rect x="580" y="50" width="80" height="8" fill="rgba(232,227,216,.35)"></rect>
+            <rect x="580" y="76" width="200" height="112" fill="none" stroke="rgba(232,227,216,.22)"></rect>
+            <rect x="592" y="88" width="176" height="42" fill="rgba(232,227,216,.12)"></rect>
+            <rect x="592" y="140" width="120" height="8" fill="rgba(232,227,216,.2)"></rect>
+            <rect x="592" y="156" width="90" height="8" fill="rgba(232,227,216,.2)"></rect>
+            <rect x="580" y="204" width="200" height="86" fill="none" stroke="var(--accent, #E88C6A)" stroke-width="1.5"></rect>
+            <rect x="592" y="216" width="176" height="34" fill="var(--accent, #E88C6A)" opacity=".22"></rect>
+            <rect x="592" y="260" width="128" height="8" fill="var(--accent, #E88C6A)" opacity=".4"></rect>
+            <rect x="592" y="274" width="76" height="8" fill="rgba(232,227,216,.2)"></rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px 56px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">05 — What it does</div>
+        <h2 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(32px, 3.6vw, 46px); line-height: 1.1; letter-spacing: -.02em; margin: 0; max-width: 20ch;">Six things it does. All of them are built.</h2>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #F2EFE8; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">01</div>
+        <div style="grid-column: 2; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Reads the design properly</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">Not pixels — structure. Tokens bound to spacing, padding, radius and colour. Component properties. Mixed-run typography. Prototype wiring. Auto-layout, including what Figma infers for hand-positioned frames.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">Variables resolve to their token names, not to hex values.</p>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #EAE5DA; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <path fill="none" d="M20 26 v112" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <path fill="none" d="M20 40 h18 M20 72 h18 M20 104 h18 M20 136 h18" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <rect x="38" y="30" width="86" height="20" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="38" y="62" width="86" height="20" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="38" y="94" width="86" height="20" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="38" y="126" width="86" height="20" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="46" y="37" width="52" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="46" y="69" width="40" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="46" y="101" width="60" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="46" y="133" width="34" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <path fill="none" d="M124 40 h22 M124 72 h22 M124 104 h22" stroke="var(--accent, #C0431C)" stroke-width="1" stroke-dasharray="3 3"></path>
+            <rect x="146" y="30" width="94" height="20" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1"></rect>
+            <rect x="146" y="62" width="94" height="20" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1"></rect>
+            <rect x="146" y="94" width="94" height="20" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1"></rect>
+            <rect x="154" y="37" width="62" height="6" fill="var(--accent, #C0431C)" opacity=".5"></rect>
+            <rect x="154" y="69" width="48" height="6" fill="var(--accent, #C0431C)" opacity=".5"></rect>
+            <rect x="154" y="101" width="70" height="6" fill="var(--accent, #C0431C)" opacity=".5"></rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #EDE9E0; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">02</div>
+        <div style="grid-column: 2; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #F2EFE8; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="22" width="224" height="126" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <path fill="none" d="M18 46 h224" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <rect x="28" y="30" width="60" height="7" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="28" y="58" width="54" height="14" fill="none" stroke="#3F7A57" stroke-width="1"></rect>
+            <rect x="34" y="62" width="42" height="6" fill="#3F7A57" opacity=".5"></rect>
+            <rect x="94" y="58" width="118" height="14" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="28" y="82" width="54" height="14" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1"></rect>
+            <rect x="34" y="86" width="30" height="6" fill="var(--accent, #C0431C)" opacity=".6"></rect>
+            <rect x="94" y="82" width="90" height="14" fill="var(--accent, #C0431C)" opacity=".18"></rect>
+            <rect x="94" y="102" width="140" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="94" y="114" width="112" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="28" y="126" width="54" height="14" fill="none" stroke="#3F7A57" stroke-width="1"></rect>
+            <rect x="34" y="130" width="42" height="6" fill="#3F7A57" opacity=".5"></rect>
+            <rect x="94" y="126" width="80" height="14" fill="rgba(26,24,20,.16)"></rect>
+          </svg>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Uses the class names you already have</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">Class names checked against your real style guide — <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em;">[existing]</code> when the class is already there, <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em;">[new]</code> with the CSS to create it. Every dimension in rem, hairlines in px.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">Nothing invented. Nothing hardcoded.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #F2EFE8; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">03</div>
+        <div style="grid-column: 2; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Knows what not to rebuild</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">Components you have already built come through as <em>reuse, do not rebuild</em>, so the agent places an instance instead of duplicating the markup.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">One master, three instances, no fourth copy.</p>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #EAE5DA; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="52" width="72" height="66" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1.5"></rect>
+            <rect x="28" y="62" width="52" height="24" fill="var(--accent, #C0431C)" opacity=".2"></rect>
+            <rect x="28" y="94" width="36" height="6" fill="var(--accent, #C0431C)" opacity=".45"></rect>
+            <rect x="28" y="104" width="24" height="6" fill="var(--accent, #C0431C)" opacity=".25"></rect>
+            <path fill="none" d="M90 85 h30 M90 85 v-40 h30 M90 85 v40 h30" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <rect x="120" y="26" width="60" height="38" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="128" y="34" width="44" height="14" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="120" y="66" width="60" height="38" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="128" y="74" width="44" height="14" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="120" y="106" width="60" height="38" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="128" y="114" width="44" height="14" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="196" y="66" width="46" height="38" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1" stroke-dasharray="4 3"></rect>
+            <path fill="none" d="M200 70 l38 30 M238 70 l-38 30" stroke="var(--accent, #C0431C)" stroke-width="1.5"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #EDE9E0; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">04</div>
+        <div style="grid-column: 2; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #F2EFE8; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="18" y="30" width="104" height="60" fill="#1A1814"></rect>
+            <rect x="30" y="48" width="66" height="8" fill="#F2EFE8"></rect>
+            <rect x="30" y="64" width="46" height="8" fill="rgba(242,239,232,.55)"></rect>
+            <rect x="18" y="98" width="104" height="20" fill="none" stroke="#3F7A57" stroke-width="1"></rect>
+            <rect x="24" y="104" width="52" height="8" fill="#3F7A57" opacity=".5"></rect>
+            <circle cx="110" cy="108" r="5" fill="#3F7A57"></circle>
+            <rect x="146" y="30" width="44" height="40" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1.5" stroke-dasharray="4 3"></rect>
+            <rect x="160" y="42" width="16" height="16" fill="var(--accent, #C0431C)" opacity=".5"></rect>
+            <path fill="none" d="M146 80 h44 M146 76 v8 M190 76 v8" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <rect x="146" y="98" width="96" height="20" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1"></rect>
+            <rect x="152" y="104" width="40" height="8" fill="var(--accent, #C0431C)" opacity=".35"></rect>
+            <path fill="none" d="M222 102 l10 12 M232 102 l-10 12" stroke="var(--accent, #C0431C)" stroke-width="1.5"></path>
+            <rect x="200" y="34" width="42" height="32" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="206" y="42" width="30" height="6" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="206" y="52" width="18" height="6" fill="rgba(26,24,20,.16)"></rect>
+          </svg>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Checks accessibility as it goes</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">It has the text colour and the background in hand at the same time, so it works out the contrast ratio itself instead of asking you to. Plus missing alt text, icon-only buttons with no accessible name, tap targets under 44×44, and skipped heading levels.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">Contrast computed, not flagged for a human.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #F2EFE8; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">05</div>
+        <div style="grid-column: 2; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Builds one section at a time</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">Then it stops and waits. Webflow has no undo API, so a wrong class costs one section, not a whole page.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">It stops on its own. You say when to carry on.</p>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #EAE5DA; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="60" y="18" width="140" height="134" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="60" y="18" width="140" height="26" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="60" y="44" width="140" height="34" fill="var(--accent, #C0431C)" opacity=".8"></rect>
+            <path fill="none" d="M52 78 h156" stroke="var(--accent, #C0431C)" stroke-width="2"></path>
+            <circle cx="52" cy="78" r="4" fill="var(--accent, #C0431C)"></circle>
+            <rect x="70" y="92" width="120" height="10" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1" stroke-dasharray="4 4"></rect>
+            <rect x="70" y="110" width="120" height="10" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1" stroke-dasharray="4 4"></rect>
+            <rect x="70" y="128" width="80" height="10" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1" stroke-dasharray="4 4"></rect>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #EDE9E0; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 64px 40px;">
+      <div style="display: grid; grid-template-columns: 220px minmax(0,1fr) minmax(0,.85fr); gap: 56px; align-items: start;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.38); padding-top: 6px; grid-column: 1; grid-row: 1;">06</div>
+        <div style="grid-column: 2; grid-row: 1; align-self: center; border: 1px solid rgba(26,24,20,.14); background: #F2EFE8; padding: 20px;">
+          <svg width="100%" height="170" viewBox="0 0 260 170" preserveAspectRatio="xMidYMid meet" style="display: block;">
+            <rect x="16" y="26" width="100" height="118" fill="none" stroke="rgba(26,24,20,.32)" stroke-width="1"></rect>
+            <rect x="26" y="38" width="80" height="30" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="26" y="78" width="52" height="8" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="26" y="92" width="66" height="8" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="26" y="114" width="40" height="16" fill="rgba(26,24,20,.16)"></rect>
+            <rect x="144" y="26" width="100" height="118" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1.5"></rect>
+            <rect x="154" y="38" width="80" height="30" fill="var(--accent, #C0431C)" opacity=".22"></rect>
+            <rect x="154" y="78" width="52" height="8" fill="var(--accent, #C0431C)" opacity=".22"></rect>
+            <rect x="154" y="92" width="72" height="8" fill="var(--accent, #C0431C)" opacity=".45"></rect>
+            <rect x="154" y="114" width="46" height="16" fill="var(--accent, #C0431C)" opacity=".22"></rect>
+            <path fill="none" d="M126 86 h8 M130 82 v8" stroke="rgba(26,24,20,.32)" stroke-width="1"></path>
+            <path fill="none" d="M240 96 l10 -10" stroke="var(--accent, #C0431C)" stroke-width="1.5"></path>
+            <circle cx="254" cy="82" r="4" fill="none" stroke="var(--accent, #C0431C)" stroke-width="1.5"></circle>
+          </svg>
+        </div>
+        <div style="grid-column: 3; grid-row: 1; max-width: 52ch;">
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(26px, 2.8vw, 36px); line-height: 1.12; letter-spacing: -.015em; margin: 0 0 16px;">Checks its own work</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.75); font-size: 17px;">After building, it publishes to staging, screenshots the live page, and compares it with the Figma export.</p>
+          <p style="margin: 20px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.5);">Staging only. Differences listed, side by side.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">06 — Worth knowing</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 40px 48px;">
+        <div>
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; margin: 0 0 8px; letter-spacing: -.01em;">It uses your Claude subscription</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.72); font-size: 16px;">Not an API key, not separate billing. The app spawns the CLI you already have — so your Webflow connection, your skills and your settings come with it.</p>
+        </div>
+        <div>
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; margin: 0 0 8px; letter-spacing: -.01em;">Nothing is published without you</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.72); font-size: 16px;">The visual check publishes to the <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em;">.webflow.io</code> staging subdomain only. Going live is never automated.</p>
+        </div>
+        <div>
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; margin: 0 0 8px; letter-spacing: -.01em;">Every session takes a snapshot first</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.72); font-size: 16px;">A structural record of pages, styles, components and element trees, so you can diff exactly what a build changed.</p>
+        </div>
+        <div>
+          <h3 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 26px; margin: 0 0 8px; letter-spacing: -.01em;">It refuses rather than guesses</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.72); font-size: 16px;">A missing MCP tool, an unresolvable class, a page that does not exist — each is a stop with a reason, not a best effort.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <sc-if value="{{ showLimits }}" hint-placeholder-val="{{ true }}">
+  <section id="limits" style="border-bottom: 1px solid rgba(26,24,20,.12); background: #EAE5DA;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 88px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">07 — Honest limits</div>
+        <p style="font-size: 15px; color: rgba(26,24,20,.6); margin: 16px 0 0; max-width: 24ch;">Five things it does not do. Read them before you install it.</p>
+      </div>
+      <div style="display: grid;">
+        <div style="display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 40px; padding: 26px 0; border-top: 1px solid rgba(26,24,20,.16);">
+          <h3 style="font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em;">A snapshot is not a backup</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.74); font-size: 16px;">Webflow's API has no backups endpoint, so nothing here can restore a site. The snapshot is a diffable record; the recoverable backup is Webflow's own restore point, which you create in the Designer. pentool.studio asks for one and writes down whether you said yes.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 40px; padding: 26px 0; border-top: 1px solid rgba(26,24,20,.16);">
+          <h3 style="font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em;">Interactions cannot be automated</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.74); font-size: 16px;">The plugin captures your prototype wiring, but neither Webflow's MCP nor its Data or Designer API can create IX3 interactions. Hover and click states are logged as a manual to-do.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 40px; padding: 26px 0; border-top: 1px solid rgba(26,24,20,.16);">
+          <h3 style="font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em;">One agent per project</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.74); font-size: 16px;">Projects run in parallel safely. Two agents on one site would race on class creation and element insertion, which Webflow has neither transactions nor undo for.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 40px; padding: 26px 0; border-top: 1px solid rgba(26,24,20,.16);">
+          <h3 style="font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em;">It cannot write your alt text</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.74); font-size: 16px;">It knows an image needs one; it does not know what the image means.</p>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: 40px; padding: 26px 0; border-top: 1px solid rgba(26,24,20,.16); border-bottom: 1px solid rgba(26,24,20,.16);">
+          <h3 style="font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em;">Class names are proposals</h3>
+          <p style="margin: 0; color: rgba(26,24,20,.74); font-size: 16px;">Derived from your Figma layer names, and marked <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em;">[name inferred]</code> when the layer was called <code style="font-family: 'IBM Plex Mono', monospace; font-size: .88em;">Frame 7</code> and the name had to come from structure instead.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <section style="background: #EDE9E0; border-bottom: 1px solid rgba(26,24,20,.12);">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 56px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; align-items: start;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 6px;">08 — The facts</div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1px; background: rgba(26,24,20,.14); border: 1px solid rgba(26,24,20,.14); font-family: 'IBM Plex Mono', monospace;">
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Figma plan</div>
+            <div style="font-size: 15px;">Free — Design mode</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Design system</div>
+            <div style="font-size: 15px;">Client-First v2.1 / Relume v3.0</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Build target</div>
+            <div style="font-size: 15px;">Webflow, official MCP</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">AI</div>
+            <div style="font-size: 15px;">Your Claude subscription</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Publishing</div>
+            <div style="font-size: 15px;">Staging only, never production</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Platform</div>
+            <div style="font-size: 15px;">macOS</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Dependencies</div>
+            <div style="font-size: 15px;">Plugin &amp; pipeline: none. App: Electron</div>
+          </div>
+          <div style="background: #F2EFE8; padding: 20px 18px;">
+            <div style="font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: rgba(26,24,20,.5); margin-bottom: 8px;">Tests</div>
+            <div style="font-size: 15px;">217 across both projects</div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <section id="get" style="background-image: linear-gradient(rgba(26,24,20,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(26,24,20,.055) 1px, transparent 1px); background-size: 64px 64px;">
+    <div style="max-width: 1180px; margin: 0 auto; padding: 96px 40px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 56px; align-items: start;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: rgba(26,24,20,.5); padding-top: 10px;">09 — Where it is now</div>
+      <div>
+        <h2 style="font-family: 'Instrument Serif', serif; font-weight: 400; font-size: clamp(36px, 4.6vw, 58px); line-height: 1.04; letter-spacing: -.02em; margin: 0 0 20px; max-width: 20ch; text-wrap: pretty;">Being tested by developers. Launching soon.</h2>
+        <p style="margin: 0 0 40px; color: rgba(26,24,20,.78); font-size: 18px; max-width: 52ch;">A handful of developers are running it on real client sites right now. If you build Webflow sites from Figma on Client-First, there is room for a few more.</p>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px; background: rgba(26,24,20,.14); border: 1px solid rgba(26,24,20,.14); margin-bottom: 40px;">
+          <div style="background: #F2EFE8; padding: 24px 22px 28px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #C0431C); margin-bottom: 12px;">In testing now</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(26,24,20,.75);">The plugin, the queue and the desktop app, end to end, on live client work. 217 tests across both projects.</p>
+          </div>
+          <div style="background: #F2EFE8; padding: 24px 22px 28px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #C0431C); margin-bottom: 12px;">What testers get</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(26,24,20,.75);">A build of the macOS app, the Figma plugin, and a direct line for the things that break. You bring your own Claude subscription.</p>
+          </div>
+          <div style="background: #F2EFE8; padding: 24px 22px 28px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent, #C0431C); margin-bottom: 12px;">What we ask</div>
+            <p style="margin: 0; font-size: 15.5px; color: rgba(26,24,20,.75);">Run it on one real page and say where it stopped, guessed, or wasted your time. That is the whole deal.</p>
+          </div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <a href="#get" style="display: inline-flex; align-items: center; gap: 10px; padding: 15px 24px; background: #1A1814; color: #F2EFE8; text-decoration: none; border-radius: 2px; font-weight: 500;">Ask for a test build</a>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; padding: 14px 18px; border: 1px solid rgba(26,24,20,.28); border-radius: 2px; background: rgba(255,255,255,.4);">hello@pentool.studio</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; color: rgba(26,24,20,.55);">Open source at launch</span>
+        </div>
+      </div>
+    </div>
+    <div style="border-top: 1px solid rgba(26,24,20,.12);">
+      <div style="max-width: 1180px; margin: 0 auto; padding: 28px 40px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(26,24,20,.55);">
+        <span>pentool.studio — Figma plugin and macOS app · in private testing</span>
+        <span>pentool.studio</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#C0431C&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#C0431C&quot;,&quot;#1B4BD5&quot;,&quot;#2E6F4E&quot;,&quot;#8A4FD1&quot;],&quot;section&quot;:&quot;Theme&quot;},&quot;showLimits&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Content&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      accent: this.props.accent ?? '#C0431C',
+      showLimits: this.props.showLimits ?? true,
+    };
+  }
+}
+</script>
+</body>
+</html>

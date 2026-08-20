@@ -1,0 +1,120 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pentool</title>
+<link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css">
+<link rel="stylesheet" href="style.css">
+
+<header id="bar">
+  <span class="drag"></span>
+  <span id="projName" class="proj">no project</span>
+  <span class="sep"></span>
+  <span class="dot" id="bridgeDot"></span>
+  <span id="bridgeText">bridge starting…</span>
+  <button id="copyToken" class="ghost" hidden title="Shared secret for the Pentool Studio Plugin">copy token</button>
+  <span class="sep"></span>
+  <span class="dot" id="ptyDot"></span>
+  <span id="ptyText">claude starting…</span>
+  <span class="spacer"></span>
+  <span id="snapTag" class="tag"></span>
+  <span id="mcpTag" class="tag"></span>
+  <span id="queueTag" class="tag"></span>
+  <button id="settingsBtn" class="ghost" title="Settings">Settings</button>
+</header>
+
+<div id="updateBar" hidden>
+  <span class="dot ok"></span>
+  <span id="updateMsg"></span>
+  <span id="updateNotes" class="notes"></span>
+  <span class="spacer"></span>
+  <button id="updateGet" class="primary tiny">Download</button>
+  <button id="updateNews" class="ghost tiny">What&rsquo;s new</button>
+  <button id="updateHide" class="ghost tiny" title="Hide until the next release">&times;</button>
+</div>
+
+<main>
+  <nav id="sidebar">
+    <div class="side-head">Projects</div>
+    <div id="projectList"><p class="empty">Loading…</p></div>
+    <div class="side-foot">
+      <button id="newProject" class="primary">+ New project</button>
+      <button id="openProject" class="ghost">Open a folder…</button>
+    </div>
+  </nav>
+
+  <section id="left">
+    <div id="pages"><p class="empty">Reading the queue…</p></div>
+  </section>
+
+  <section id="right">
+    <div class="pane-head">
+      <span class="seg">
+        <button id="viewProgress" aria-pressed="true">Progress</button>
+        <button id="viewMessages" aria-pressed="false">Messages</button>
+      </span>
+      <span class="spacer"></span>
+      <span id="agentMode" class="tag"></span>
+    </div>
+    <div id="progress"><p class="empty">Nothing building.</p></div>
+    <div id="messages" hidden><p class="empty">Switch the agent to Messages to see its replies here.</p></div>
+    <form id="promptForm">
+      <input id="prompt" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Message Claude — e.g. continue">
+      <button type="submit" class="primary">Send</button>
+    </form>
+  </section>
+</main>
+
+<section id="drawer" class="closed">
+  <button id="drawerToggle"><span class="chev">▸</span> Terminal</button>
+  <div id="termWrap"><div id="term"></div></div>
+</section>
+
+<dialog id="settingsDlg">
+  <form method="dialog" class="card">
+    <h2>Site settings</h2>
+    <label for="tokenIn">Webflow API token</label>
+    <input id="tokenIn" type="password" autocomplete="off" placeholder="site token">
+    <p class="hint" id="tokenHint"></p>
+
+    <hr>
+    <label>Updates</label>
+    <div class="row">
+      <p class="hint" id="verHint" style="flex:1">Pentool</p>
+      <button id="checkUpdate" type="button" class="ghost">Check for updates</button>
+    </div>
+
+    <menu>
+      <button value="cancel" class="ghost">Close</button>
+      <button id="saveToken" class="primary" value="save">Save</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="newDlg">
+  <form method="dialog" class="card">
+    <h2>New project</h2>
+    <label for="npName">Name</label>
+    <input id="npName" type="text" autocomplete="off" placeholder="acme-rebuild">
+    <label for="npDir">Location</label>
+    <div class="row">
+      <input id="npDir" type="text" autocomplete="off" placeholder="choose a folder…" readonly>
+      <button id="npPick" type="button" class="ghost">Choose…</button>
+    </div>
+    <label for="npToken">Webflow API token</label>
+    <div class="row">
+      <input id="npToken" type="password" autocomplete="off" placeholder="site token">
+      <button id="npVerify" type="button">Verify</button>
+    </div>
+    <label for="npSite">Webflow site</label>
+    <select id="npSite" disabled><option value="">verify a token first…</option></select>
+    <p class="hint" id="npHint">A Site API token comes from Webflow → Site settings → Apps &amp; integrations.</p>
+    <menu>
+      <button value="cancel" class="ghost">Cancel</button>
+      <button id="npCreate" class="primary" value="create">Create</button>
+    </menu>
+  </form>
+</dialog>
+
+<script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+<script src="app.js"></script>

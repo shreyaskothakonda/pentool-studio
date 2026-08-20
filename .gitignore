@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/node_modules/
+
+# Per-machine and per-project state, never shared.
+queue/_bridge-token
+queue/_state.json
+queue/_session.json
+**/queue/_bridge-token
+**/queue/_state.json
+**/queue/_session.json
+
+.DS_Store
+.playwright-mcp/
+*.log

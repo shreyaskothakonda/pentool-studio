@@ -1,0 +1,459 @@
+/* Inter, bundled rather than assumed. The kit's whole rhythm is Inter at
+   11.5/12.5px with negative tracking; on a machine without it the app fell back
+   to the system face and the measurements stopped meaning anything.
+
+   One variable file covers every weight — the 100 900 range is what lets the
+   browser synthesise 400 and 600 from it. Its opsz axis bottoms out at 14, so
+   optical sizing clamps there for our smaller sizes, which is the text end of
+   the axis and the right end for UI. */
+@font-face {
+  font-family: 'Inter';
+  src: url('inter_variable_font.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Pentool — styled to the Webflow App UI Kit.
+   The app builds Webflow sites, so it borrows Webflow's own surface palette,
+   control shading and type scale rather than inventing a third look. Token names
+   are kept verbatim so they can be diffed against the kit; the short aliases
+   below are the only local invention, and they exist so a swap of the kit is a
+   change to one block. */
+
+:root {
+  /* ── Webflow: surfaces ── */
+  --background1: #1E1E1E;
+  --background2: #2E2E2E;
+  --background3: #383838;
+  --background4: #373737;
+  --background5: #444444;
+  --backgroundInactive: #2E2E2E;
+  --backgroundInverse: #EBEBEB;
+  --backgroundInput: rgba(0, 0, 0, 0.15);
+
+  /* ── Webflow: actions ── */
+  --actionPrimaryBackground: #006ACC;
+  --actionPrimaryBackgroundHover: #187CD9;
+  --actionSecondaryBackground: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.10) 100%);
+  --actionSecondaryBackgroundHover: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.16) 100%);
+  --actionPrimaryText: #FFFFFF;
+  --actionSecondaryText: #E0E0E0;
+
+  /* ── Webflow: borders and text ── */
+  --border1: rgba(255, 255, 255, 0.13);
+  --border2: rgba(255, 255, 255, 0.14);
+  --border3: rgba(255, 255, 255, 0.19);
+  --text1: #F5F5F5;
+  --text2: #BDBDBD;
+  --text3: #A3A3A3;
+  --textInactive: #757575;
+  --textInverse: #1E1E1E;
+
+  /* ── Webflow: semantic colour ── */
+  --blueText: #8AC2FF;   --blueBorder: #007DF0;
+  --greenBackground: #007A41; --greenText: #63D489; --greenBorder: #259D4D;
+  --yellowBackground: #946B00; --yellowText: #F3C831; --yellowBorder: #D7A220;
+  --redBackground: #CF313B; --redBackgroundHover: #CB3535;
+  --redText: #FF8A8A; --redBorder: #E42F3A;
+  --orangeText: #EBA267;
+  --purpleText: #B89EFF;
+
+  /* ── Webflow: elevation ── */
+  --boxShadows-action-colored:
+    0px 0.5px 1px 0px rgba(0,0,0,0.8), 0px 0.5px 0.5px 0px rgba(255,255,255,0.20) inset;
+  --boxShadows-action-secondary:
+    0px 0.5px 1px rgba(0,0,0,0.8), inset 0px 0.5px 0.5px rgba(255,255,255,0.12);
+  --input-inner-shadow:
+    0px 1px 1px -1px rgba(0,0,0,0.13) inset, 0px 3px 3px -3px rgba(0,0,0,0.17) inset,
+    0px 4px 4px -4px rgba(0,0,0,0.17) inset, 0px 8px 8px -8px rgba(0,0,0,0.17) inset,
+    0px 12px 12px -12px rgba(0,0,0,0.13) inset, 0px 16px 16px -16px rgba(0,0,0,0.13) inset;
+  /* Read off the captured Button/Dropdown/Popover, which carry more layers than
+     the kit's summary variables do. */
+  --shadow-button-primary:
+    0px 0.5px 1px rgba(0,0,0,1), inset 0px 0.5px 0.5px rgba(255,255,255,0.20),
+    inset 0px 29px 23px -16px rgba(255,255,255,0.04);
+  --shadow-control:
+    inset 0px 0.5px 0.5px rgba(255,255,255,0.12), 0px 0.5px 1px rgba(0,0,0,1);
+  --shadow-popover:
+    0px 5px 10px -2px rgba(0,0,0,0.32), 0px 1px 3px -1px rgba(0,0,0,0.34);
+
+  /* Webflow spaces on a strict 4px rhythm. */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --control-h: 24px;
+  --radius-sm: 2px;
+
+  --menu-shadow:
+    0px 12px 24px 8px rgba(0,0,0,0.08), 0px 8px 16px 4px rgba(0,0,0,0.08),
+    0px 4px 8px 2px rgba(0,0,0,0.08), 0px 2px 6px 0px rgba(0,0,0,0.08),
+    0px -0.5px 0.5px 0px rgba(0,0,0,0.12) inset, 0px 0.5px 0.5px 0px rgba(255,255,255,0.12) inset;
+
+  /* ── Webflow: type ── */
+  --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-size-small: 11.5px;
+  --font-size-small-letter-spacing: -0.115px;
+  --font-size-large: 12.5px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+  --border-radius: 4px;
+
+  /* ── local aliases, so a kit swap is one block ── */
+  --bg: var(--background1);
+  --panel: var(--background2);
+  --raised: var(--background3);
+  --line: var(--border1);
+  --line-strong: var(--border3);
+  --text: var(--text1);
+  --mut: var(--text2);
+  --edge: var(--text3);
+  --accent: var(--actionPrimaryBackground);
+  --accent-hi: var(--actionPrimaryBackgroundHover);
+  --ok: var(--greenText);
+  --warn: var(--yellowText);
+  --err: var(--redText);
+  --hover: rgba(255, 255, 255, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: var(--font-weight-normal) var(--font-size-large)/1.5 var(--font-stack);
+  letter-spacing: var(--font-size-small-letter-spacing);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* ── controls: Webflow shades its buttons rather than outlining them ── */
+button {
+  font: inherit; font-size: var(--font-size-small);
+  font-weight: var(--font-weight-normal);   /* the kit's Button label is Small Regular */
+  border-radius: var(--border-radius); border: none; cursor: pointer;
+  /* The captured Button labels in Text/text1, not actionSecondaryText — the kit's
+     variable list and its built component disagree, and the component wins. */
+  background: var(--actionSecondaryBackground); color: var(--text1);
+  box-shadow: var(--shadow-control);
+  height: var(--control-h); padding: 0 var(--s2);
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+}
+button:hover:not(:disabled) { background: var(--actionSecondaryBackgroundHover); }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible { outline: 1px solid var(--blueBorder); outline-offset: 1px; }
+button.primary {
+  background: var(--actionPrimaryBackground); color: var(--actionPrimaryText);
+  box-shadow: var(--shadow-button-primary);
+}
+button.primary:hover:not(:disabled) { background: var(--actionPrimaryBackgroundHover); }
+button.danger {
+  background: var(--redBackground); color: var(--actionPrimaryText);
+  box-shadow: var(--shadow-button-primary);
+}
+button.danger:hover:not(:disabled) { background: var(--redBackgroundHover); }
+button.ghost {
+  background: none; color: var(--text3);
+  box-shadow: none; border: 1px solid var(--line); padding: 0 var(--s2);
+}
+button.ghost:hover:not(:disabled) { background: var(--hover); color: var(--text1); }
+button.tiny { height: 20px; padding: 0 var(--s1); }
+
+/* A text field is inset; a Dropdown is a raised control wearing the secondary
+   gradient. The kit treats them differently and so does this. */
+input {
+  font: inherit; font-size: var(--font-size-small); color: var(--text1);
+  background: var(--backgroundInput); border: 1px solid var(--line);
+  border-radius: var(--border-radius);
+  height: var(--control-h); padding: 0 var(--s2);
+  box-shadow: var(--input-inner-shadow);
+}
+select {
+  font: inherit; font-size: var(--font-size-small); color: var(--text1);
+  background: var(--actionSecondaryBackground); border: none;
+  border-radius: var(--border-radius);
+  height: var(--control-h); padding: 0 var(--s1) 0 var(--s2);
+  box-shadow: var(--shadow-control);
+}
+select:hover { background: var(--actionSecondaryBackgroundHover); }
+input:focus, select:focus { outline: none; border-color: var(--blueBorder); }
+input::placeholder { color: var(--textInactive); }
+
+#bar {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: 0 var(--s2) 0 84px; height: 40px; flex: none;
+  background: var(--background1);
+  border-bottom: 1px solid var(--border1); -webkit-app-region: drag;
+  font-size: var(--font-size-small); color: var(--mut);
+}
+#bar button, #bar .tag { -webkit-app-region: no-drag; }
+.spacer { flex: 1; }
+.sep { width: 1px; height: 16px; background: var(--line); margin: 0 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--textInactive); flex: none; }
+.dot.ok { background: var(--greenText); } .dot.err { background: var(--redText); }
+.tag {
+  font-size: var(--font-size-small); padding: 2px var(--s2);
+  border: 1px solid var(--line); border-radius: 99px; color: var(--mut);
+}
+.tag.bad { border-color: var(--redBorder); color: var(--redText); }
+
+main { flex: 1; display: flex; min-height: 0; }
+#left {
+  width: 340px; flex: none; border-right: 1px solid var(--line);
+  overflow-y: auto; padding: var(--s2);
+}
+#right { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#progress { flex: 1; overflow-y: auto; padding: var(--s2); }
+.empty { color: var(--mut); font-size: var(--font-size-small); }
+
+.page { margin-bottom: var(--s4); }
+.page h2 {
+  font-size: var(--font-size-large); font-weight: var(--font-weight-medium);
+  margin: 0 0 var(--s2); display: flex; align-items: center; gap: var(--s2); color: var(--text1);
+}
+.page h2 .file { color: var(--mut); font-weight: var(--font-weight-normal); font-size: var(--font-size-small); }
+.page h2 button { margin-left: auto; }
+
+.sec {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s1) var(--s2); min-height: 32px;
+  border: 1px solid var(--line); border-radius: var(--border-radius);
+  margin-bottom: var(--s1); background: var(--panel); cursor: default;
+}
+.sec:hover { border-color: var(--border3); }
+.sec.dragging { opacity: .4; }
+.sec.over { border-color: var(--blueBorder); }
+.grip { cursor: grab; color: var(--textInactive); flex: none; user-select: none; }
+.grip:active { cursor: grabbing; }
+.sec .name { flex: 1 1 auto; min-width: 4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec .name:hover { color: var(--blueText); cursor: pointer; }
+.sec .mode, .sec button { flex: none; }
+.mode {
+  font-size: var(--font-size-small); color: var(--text3); background: var(--raised);
+  border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 1px var(--s1); cursor: pointer; flex: none;
+}
+.mode:hover { color: var(--blueText); border-color: var(--blueBorder); }
+
+.issue { font-size: var(--font-size-small); margin: 2px 0 var(--s2) var(--s6); }
+.issue.error { color: var(--redText); } .issue.warn { color: var(--yellowText); }
+
+.prow { display: flex; gap: var(--s2); padding: var(--s1) 0; align-items: baseline; }
+.prow .n { color: var(--text1); }
+.prow .detail { color: var(--mut); font-size: var(--font-size-small); }
+
+#promptForm { display: flex; gap: var(--s2); padding: var(--s2); border-top: 1px solid var(--line); flex: none; }
+#prompt { flex: 1; }
+
+#drawer { flex: none; border-top: 1px solid var(--line); display: flex; flex-direction: column; }
+#drawer.closed #termWrap { display: none; }
+#drawerToggle {
+  font: inherit; font-size: var(--font-size-large); color: var(--mut);
+  background: none; box-shadow: none; border: 0; padding: var(--s2); cursor: pointer;
+  /* The base button is a centred inline-flex control; this one is a full-width
+     row, so it opts out of both. */
+  height: auto; width: 100%; justify-content: flex-start; text-align: left;
+}
+#drawerToggle:hover { color: var(--text1); background: none; }
+#drawer:not(.closed) .chev { display: inline-block; transform: rotate(90deg); }
+#termWrap { height: 300px; padding: 0 var(--s2) var(--s2); }
+#term { height: 100%; }
+
+/* ─────────────────────────── projects sidebar ─────────────────────────── */
+#sidebar {
+  flex: none; width: 190px; border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0;
+}
+.side-head {
+  font-size: var(--font-size-small); letter-spacing: .06em; text-transform: uppercase;
+  color: var(--textInactive); padding: var(--s3) var(--s2) var(--s1);
+}
+#projectList { flex: 1; overflow-y: auto; padding: 0 var(--s1); }
+.proj-row {
+  display: flex; align-items: center; gap: var(--s1); padding: var(--s1) var(--s2);
+  min-height: var(--control-h);
+  border-radius: var(--border-radius); cursor: pointer; font-size: var(--font-size-large);
+  color: var(--text2);
+}
+.proj-row:hover { background: var(--hover); color: var(--text1); }
+.proj-row.active {
+  background: var(--raised); color: var(--text1);
+  font-weight: var(--font-weight-medium); cursor: default;
+}
+.proj-row.missing { opacity: .5; cursor: default; }
+.proj-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proj-note { font-size: var(--font-size-small); color: var(--textInactive); }
+.side-foot { padding: var(--s2); border-top: 1px solid var(--line); display: grid; gap: var(--s1); }
+.side-foot button { width: 100%; }
+
+.proj { font-weight: var(--font-weight-medium); color: var(--text1); }
+.proj.none { color: var(--textInactive); font-weight: var(--font-weight-normal); }
+
+/* ───────────────────────────── row status ───────────────────────────── */
+.status { width: 16px; text-align: center; flex: none; color: var(--textInactive); }
+.status.st-done     { color: var(--greenText); }
+.status.st-building { color: var(--blueText); }
+.status.st-blocked  { color: var(--redText); font-weight: 700; }
+.sec.is-done .name { color: var(--textInactive); text-decoration: line-through; }
+
+/* ─────────────────────────────── dialogs ─────────────────────────────── */
+dialog { border: none; border-radius: var(--border-radius); padding: 0; background: transparent; }
+dialog::backdrop { background: rgba(0, 0, 0, .5); }
+dialog .card {
+  width: min(420px, 90vw); background: var(--background2); color: var(--text1);
+  border: 1px solid var(--border2); border-radius: var(--border-radius); padding: var(--s4);
+  display: grid; gap: var(--s1); box-shadow: var(--shadow-popover);
+}
+dialog h2 {
+  font-size: var(--font-size-large); font-weight: var(--font-weight-medium); margin: 0 0 var(--s1);
+}
+dialog label { font-size: var(--font-size-small); color: var(--text3); }
+dialog input, dialog select { width: 100%; }
+dialog .row { display: flex; gap: var(--s1); }
+dialog .row input { flex: 1; }
+dialog .hint {
+  font-size: var(--font-size-small); color: var(--text3); margin: 2px 0 0; line-height: 1.5;
+}
+dialog menu { display: flex; justify-content: flex-end; gap: var(--s1); margin: var(--s3) 0 0; padding: 0; }
+
+/* ─────────────────────────────── icon buttons ─────────────────────────── */
+button.icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: var(--control-h); height: var(--control-h); padding: 0; flex: none;
+  border-radius: var(--border-radius);
+}
+button.icon svg { display: block; }
+.proj-row button.icon { opacity: 0; transition: opacity .12s ease; }
+.proj-row:hover button.icon, .proj-row button.icon:focus-visible { opacity: 1; }
+.sec button.icon { opacity: .55; }
+.sec:hover button.icon, .sec button.icon:focus-visible { opacity: 1; }
+.sec button.icon:hover { color: var(--redText); }
+@media (prefers-reduced-motion: reduce) { .proj-row button.icon { transition: none; } }
+
+
+/* ─────────────────────────────── Note ───────────────────────────────
+   The kit's Note, read off the captured component: a row with 8px padding and
+   gap, 4px radius, and a six-layer shadow. Two variants — default sits on
+   background3 with text2 copy, success on greenBackground with white copy. */
+.note-stack {
+  position: fixed; right: var(--s2); bottom: var(--s2);
+  display: grid; gap: var(--s1); z-index: 20; max-width: 320px;
+}
+.note {
+  display: flex; gap: var(--s2); padding: var(--s2);
+  border-radius: var(--border-radius);
+  background: var(--background3); color: var(--text2);
+  box-shadow:
+    0 12px 24px 8px rgba(0,0,0,0.08), 0 8px 16px 4px rgba(0,0,0,0.08),
+    0 4px 8px 2px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.08),
+    inset 0 -0.5px 0.5px rgba(0,0,0,0.12), inset 0 0.5px 0.5px rgba(255,255,255,0.12);
+  font-size: var(--font-size-small); line-height: 16px;
+  animation: note-in .12s ease-out;
+}
+.note.success { background: var(--greenBackground); color: var(--actionPrimaryText); }
+.note.error   { background: var(--redBackground);   color: var(--actionPrimaryText); }
+.note .mark { flex: none; width: 16px; text-align: center; }
+.note .body { flex: 1; min-width: 0; }
+.note .close {
+  flex: none; width: 16px; height: 16px; padding: 0; border: 0;
+  background: none; box-shadow: none; color: inherit; opacity: .7;
+  border-radius: var(--radius-sm);
+}
+.note .close:hover { opacity: 1; background: rgba(255,255,255,.12); }
+@keyframes note-in { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .note { animation: none; } }
+
+/* ───────────────────────── list rows, kit-style ─────────────────────────
+   Webflow lists a set of records as divider-separated two-line rows with the
+   state as a coloured word on the right — not as bordered cards with glyphs.
+   Adopted here because the queue IS that: a list of records with a state. */
+.sec {
+  border: none; border-radius: 0; background: none;
+  border-top: 1px solid var(--line);
+  padding: var(--s2) var(--s1); margin: 0;
+  min-height: 40px; gap: var(--s2);
+}
+.sec:first-of-type { border-top: none; }
+.sec:hover { background: var(--hover); border-color: var(--line); }
+.sec .lines { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.sec .name {
+  font-size: var(--font-size-large); font-weight: var(--font-weight-medium);
+  color: var(--text1);
+}
+.sec .meta {
+  font-size: var(--font-size-small); color: var(--text2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sec .state-word {
+  flex: none; width: 56px; text-align: right;
+  font-size: var(--font-size-small); color: var(--textInactive);
+}
+.sec .state-word.st-done     { color: var(--greenText); }
+.sec .state-word.st-building { color: var(--blueText); }
+.sec .state-word.st-blocked  { color: var(--redText); }
+.sec .actions { flex: none; display: flex; gap: var(--s1); opacity: 0; }
+.sec:hover .actions, .sec:focus-within .actions { opacity: 1; }
+.sec.is-done .name { color: var(--text2); text-decoration: none; }
+
+/* Inline blue link, as used for Back / Unlink in the kit. */
+.link-text {
+  color: var(--blueText); font-size: var(--font-size-small);
+  background: none; border: 0; box-shadow: none; padding: 0; height: auto;
+}
+.link-text:hover { background: none; text-decoration: underline; }
+
+/* ─────────────────────── right pane: progress / messages ─────────────────── */
+.pane-head {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: var(--s2); border-bottom: 1px solid var(--line); flex: none;
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--border-radius); overflow: hidden; }
+.seg button {
+  border-radius: 0; box-shadow: none; background: none; color: var(--text2);
+  height: 22px; padding: 0 var(--s2);
+}
+.seg button[aria-pressed="true"] { background: var(--actionPrimaryBackground); color: var(--actionPrimaryText); }
+.seg button:not([aria-pressed="true"]):hover { background: var(--hover); color: var(--text1); }
+
+#messages { flex: 1; overflow-y: auto; padding: var(--s2); display: flex; flex-direction: column; gap: var(--s2); }
+.msg { display: flex; flex-direction: column; gap: var(--s1); }
+.msg .who {
+  font-size: var(--font-size-small); color: var(--text3);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.msg .body { white-space: pre-wrap; word-break: break-word; }
+.msg.user .body {
+  background: var(--background3); border-radius: var(--border-radius);
+  padding: var(--s2); color: var(--text1);
+}
+.msg.tool {
+  flex-direction: row; align-items: baseline; gap: var(--s2);
+  font-size: var(--font-size-small); color: var(--text2);
+}
+.msg.tool .name { color: var(--blueText); flex: none; }
+.msg.tool .arg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg.result {
+  font-size: var(--font-size-small); color: var(--text3);
+  border-top: 1px solid var(--line); padding-top: var(--s2);
+}
+.msg.result.err { color: var(--redText); }
+.msg.think { font-size: var(--font-size-small); color: var(--textInactive); font-style: italic; }
+
+/* The update strip. Below the header rather than inside it: the header is a
+   status line whose contents never move, and a notice that appears and
+   disappears would reflow it every time. */
+#updateBar {
+  display: flex; align-items: center; gap: var(--s2); flex: none;
+  padding: var(--s2) var(--s3);
+  background: var(--background2);
+  border-bottom: 1px solid var(--blueBorder);
+  font-size: var(--font-size-small); color: var(--text1);
+}
+#updateBar[hidden] { display: none; }
+#updateBar .notes {
+  color: var(--text3); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#updateBar #updateHide { color: var(--text3); }
+dialog .card hr {
+  border: 0; border-top: 1px solid var(--line);
+  margin: var(--s3) 0 var(--s1);
+}
