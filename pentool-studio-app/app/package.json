@@ -1,7 +1,7 @@
 {
   "name": "pentool",
   "productName": "Pentool",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Build Figma designs into Webflow, with Claude Code inside",
   "main": "main.js",
   "private": true,
