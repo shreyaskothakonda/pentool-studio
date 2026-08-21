@@ -610,11 +610,29 @@ ipcMain.handle('bridge:copyToken', () => {
   return !!bridgeStatus.token;
 });
 
-ipcMain.handle('section:open', (_e, dirRel) => {
-  const file = path.join(ROOT, dirRel, 'section.md');
-  if (!fs.existsSync(file)) return { ok: false, error: 'section.md not found' };
+ipcMain.handle('section:open', (_e, dirRel, fileName) => {
+  // basename, because the name comes from the renderer and this opens whatever
+  // it is handed. Defaults to section.md; the rebuild dialog asks for the
+  // archived build log by name.
+  const leaf = path.basename(String(fileName || 'section.md'));
+  const file = path.join(ROOT, dirRel, leaf);
+  if (!fs.existsSync(file)) return { ok: false, error: leaf + ' not found' };
   shell.openPath(file);
   return { ok: true };
+});
+
+/* Forget that a section was built, so it can be built again. Deliberately not
+   called "undo": see lib/unbuild.js, and the dialog that fronts this. */
+ipcMain.handle('section:unbuild', (_e, { section, page }) => {
+  if (!ROOT) return { ok: false, error: 'no project is open' };
+  try {
+    const { unbuild } = require(path.join(ROOT, 'lib', 'unbuild'));
+    const r = unbuild(ROOT, section, page || null);
+    pushSnapshot();
+    return Object.assign({ ok: true }, r);
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 });
 
 ipcMain.handle('section:reorder', (_e, { pageFile, from, to }) => {

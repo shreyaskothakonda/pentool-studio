@@ -471,3 +471,13 @@ dialog .card hr {
   border: 0; border-top: 1px solid var(--line);
   margin: var(--s3) 0 var(--s1);
 }
+
+/* The one thing in this app that cannot be taken back. It is stated, not hinted:
+   Pentool can forget a build, and Webflow cannot undo one. */
+.warnbox {
+  margin: var(--s2) 0; padding: var(--s2) var(--s3);
+  border: 1px solid var(--yellowBorder); border-radius: var(--radius-sm);
+  background: rgba(148, 107, 0, 0.18);
+  color: var(--text1); font-size: var(--font-size-small); line-height: 1.45;
+}
+dialog .card menu .spacer { flex: 1; }

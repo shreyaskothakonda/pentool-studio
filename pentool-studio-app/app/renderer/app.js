@@ -267,6 +267,63 @@ function renderProject(payload) {
   }
 }
 
+/* ──────────────────────────── build again ────────────────────────────
+   A confirm() is not enough here. What this does is small and local — Pentool
+   forgets a section was built. What it does NOT do is the part that matters,
+   and it is the part everyone assumes: Webflow has no undo API, so everything
+   the build already wrote to the live site stays exactly where it is.
+
+   The confirm button says "Forget the build", not "Build again", because it
+   does not start a build. A button that misnames its own action is the kind of
+   thing this whole pass exists to remove. */
+
+let rebuilding = null;
+
+function openRebuild(step) {
+  rebuilding = step;
+  const site = (current.config && (current.config.siteName || current.config.siteId)) || 'your site';
+
+  $('rbTitle').textContent = 'Build again — ' + step.section;
+  $('rbWhat').textContent =
+    'Pentool will forget that this section was built on ' + step.page +
+    ', move it back into queue/sections/, and archive its build log.';
+  $('rbWarn').textContent =
+    'Webflow has no undo. Everything this section already wrote to ' + site +
+    ' is still on the site, and Pentool cannot remove it.';
+  $('rbDup').textContent = step.build === 'component'
+    ? 'The component itself is kept, so a rebuild will not duplicate it — but it ' +
+      'will insert a second instance on the page. Delete the existing one in the ' +
+      'Webflow Designer first.'
+    : 'Rebuilding appends a second copy under .' + step.anchor +
+      '. Delete the existing one in the Webflow Designer first.';
+
+  /* Always offered: a section that reached `done` was built, and being built is
+     what writes the log. Whether the file is actually there is the main
+     process's question to answer — it has the filesystem and this does not. */
+  const log = $('rbLog');
+  log.hidden = false;
+  log.onclick = async () => {
+    const r = await window.pentool.openSection(step.dir, 'build-log.md');
+    if (!r.ok) note('No build log for ' + step.section + ' — it was built before Pentool kept one.', 'warn');
+  };
+
+  $('rebuildDlg').showModal();
+}
+
+$('rebuildDlg').addEventListener('close', async () => {
+  const step = rebuilding;
+  rebuilding = null;
+  if (!step || $('rebuildDlg').returnValue !== 'go') return;
+
+  const r = await window.pentool.unbuildSection({ section: step.section, page: step.page });
+  if (!r.ok) return note(r.error || 'could not forget the build', 'error');
+
+  note(step.section + ' is queued again' +
+       (r.logArchived ? '. Its build log is at ' + r.logArchived : '.'), 'success');
+  // Said separately so it survives the success note fading.
+  note('Webflow still has what it built. Delete it in the Designer before building again.', 'warn');
+});
+
 /* ───────────────────────────── settings ───────────────────────────── */
 
 let settingsSite = null;
@@ -591,6 +648,15 @@ function render(snap) {
           : note(r.error || 'could not remove', 'error');
       };
       actions.appendChild(del);
+
+      /* Only on something already built — the point of it is to undo the
+         "done", and offering it on a queued section would be noise. */
+      if (status === 'done') {
+        const again = el('button', 'ghost tiny', 'Build again');
+        again.title = 'Forget that this section was built, so it can be built again';
+        again.onclick = (e) => { e.stopPropagation(); openRebuild(s); };
+        actions.appendChild(again);
+      }
 
       const attach = el('button', 'ghost tiny', 'Claude');
       attach.title = 'Give the agent this section as context';

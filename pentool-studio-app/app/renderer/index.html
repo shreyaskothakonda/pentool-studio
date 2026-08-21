@@ -90,6 +90,21 @@
   </form>
 </dialog>
 
+<dialog id="rebuildDlg">
+  <form method="dialog" class="card">
+    <h2 id="rbTitle">Build again</h2>
+    <p class="hint" id="rbWhat"></p>
+    <p class="warnbox" id="rbWarn"></p>
+    <p class="hint" id="rbDup"></p>
+    <menu>
+      <button id="rbLog" type="button" class="ghost" hidden>Open the build log</button>
+      <span class="spacer"></span>
+      <button value="cancel" class="ghost">Cancel</button>
+      <button id="rbGo" class="primary" value="go">Forget the build</button>
+    </menu>
+  </form>
+</dialog>
+
 <dialog id="newDlg">
   <form method="dialog" class="card">
     <h2>New project</h2>

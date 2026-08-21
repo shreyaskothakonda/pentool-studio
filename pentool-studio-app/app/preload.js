@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('pentool', {
   snapshotStatus:() => ipcRenderer.invoke('snapshot:status'),
   getBridge:     () => ipcRenderer.invoke('bridge:get'),
   copyToken:     () => ipcRenderer.invoke('bridge:copyToken'),
-  openSection:   (dirRel) => ipcRenderer.invoke('section:open', dirRel),
+  openSection:   (dir, file) => ipcRenderer.invoke('section:open', dir, file),
   reorder:       (pageFile, from, to) => ipcRenderer.invoke('section:reorder', { pageFile, from, to }),
   setBuildMode:  (dirRel, mode) => ipcRenderer.invoke('section:setBuild', { dirRel, mode }),
 
@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('pentool', {
   verifyToken:   (t) => ipcRenderer.invoke('webflow:verify', t),
   refreshWebflow:() => ipcRenderer.invoke('webflow:refresh'),
 
+  unbuildSection: (o) => ipcRenderer.invoke('section:unbuild', o),
   attachSection: (step) => ipcRenderer.invoke('section:attach', step),
   removeSection: (o) => ipcRenderer.invoke('section:remove', o),
   startBuild:    (page) => ipcRenderer.invoke('build:start', page),

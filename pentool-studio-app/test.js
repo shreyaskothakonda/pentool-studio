@@ -813,6 +813,115 @@ section('bridge — writeSection');
   }
 }
 
+section('unbuild — putting a finished section back');
+{
+  const { unbuild } = require('./lib/unbuild');
+  const { resolve } = require('./lib/queue');
+
+  const mk = (extra) => fixture(Object.assign({
+    'queue/_config.json': CONFIG,
+    'queue/pages/a.md': '---\npage: /a\nsections:\n  - shared\n---\n',
+    'queue/pages/b.md': '---\npage: /b\nsections:\n  - shared\n---\n',
+    'queue/_done/shared/section.md': sectionFile('name: shared\nbuild: static'),
+    'queue/_state.json': JSON.stringify({
+      components: { 'market-card': 'c1' }, assets: { abc: 'a1' },
+      built: { '/a': ['shared'], '/b': ['shared'] }
+    })
+  }, extra));
+
+  {
+    const root = mk();
+    const r = unbuild(root, 'shared', '/a');
+    check('reports the page it forgot', r.pages, ['/a']);
+    check('the finished copy comes back', fs.existsSync(pathm.join(root, 'queue/sections/shared/section.md')), true);
+    check('and is gone from _done', fs.existsSync(pathm.join(root, 'queue/_done/shared')), false);
+
+    const st = JSON.parse(fs.readFileSync(pathm.join(root, 'queue/_state.json'), 'utf8'));
+    check('only that page forgets it', st.built['/b'], ['shared']);
+    check('and the built list for it is dropped, not emptied', '/a' in st.built, false);
+
+    // Forgetting these would make the next build create a second component and
+    // re-upload every asset.
+    check('component ids are kept', st.components, { 'market-card': 'c1' });
+    check('asset ids are kept', st.assets, { abc: 'a1' });
+
+    const by = {}; resolve(root).steps.forEach((x) => { by[x.page] = x.status; });
+    check('queued again on the page it forgot', by['/a'], 'queued');
+    check('still done on the page it did not', by['/b'], 'done');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // No page given: forget it everywhere.
+    const root = mk();
+    const r = unbuild(root, 'shared');
+    check('forgets every page', r.pages.sort(), ['/a', '/b']);
+    check('and the built map is empty',
+      Object.keys(JSON.parse(fs.readFileSync(pathm.join(root, 'queue/_state.json'), 'utf8')).built).length, 0);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    /* Recaptured since it was built. The live copy is newer and authoritative,
+       so the finished one must not land on top of it. */
+    const root = mk({ 'queue/sections/shared/section.md': sectionFile('name: shared\nbuild: static\n# fresh') });
+    const live = pathm.join(root, 'queue/sections/shared/section.md');
+    const before = fs.readFileSync(live, 'utf8');
+    const r = unbuild(root, 'shared');
+    check('the live capture is untouched', fs.readFileSync(live, 'utf8'), before);
+    check('the finished copy is trashed, not deleted', /_trash/.test(r.trashed || ''), true);
+    check('and it still exists there', fs.existsSync(pathm.join(root, r.trashed)), true);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    /* The log is the only record of what reached the live site, and leaving it
+       in place would make the section read stalled forever. */
+    const root = mk();
+    fs.writeFileSync(pathm.join(root, 'queue/_done/shared/build-log.md'),
+      'started 2026-08-22T10:00:00Z\ncreated .section_x\ndone 2026-08-22T10:05:00Z\n');
+    const r = unbuild(root, 'shared');
+    check('the log is archived', /build-log-.*\.md$/.test(r.logArchived || ''), true);
+    check('and its contents survive',
+      /created \.section_x/.test(fs.readFileSync(pathm.join(root, r.logArchived), 'utf8')), true);
+    check('the live folder has no build-log.md left',
+      fs.existsSync(pathm.join(root, 'queue/sections/shared/build-log.md')), false);
+    const by = {}; resolve(root).steps.forEach((x) => { by[x.page] = x.status; });
+    check('so it reads queued, not stalled', by['/a'], 'queued');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // There is no honest local undo for "you redefined a component everywhere".
+    const root = fixture({
+      'queue/_config.json': CONFIG,
+      'queue/pages/a.md': '---\npage: /a\nsections:\n  - upd\n---\n',
+      'queue/sections/upd/section.md': sectionFile('name: upd\nbuild: update\ncomponentId: c9'),
+      'queue/_state.json': JSON.stringify({ components: {}, assets: {}, built: { '/a': ['upd'] } })
+    });
+    const before = fs.readFileSync(pathm.join(root, 'queue/_state.json'), 'utf8');
+    throws('refuses a component update', () => unbuild(root, 'upd'), /nothing local to undo/);
+    check('and changed nothing', fs.readFileSync(pathm.join(root, 'queue/_state.json'), 'utf8'), before);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    const root = mk();
+    throws('an unknown section is refused', () => unbuild(root, 'nope'), /no section named/);
+    throws('and so is an empty name', () => unbuild(root, '  '), /which section/);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // Resetting it would strand every component and asset id in Webflow.
+    const root = mk({ 'queue/_state.json': '{ not json' });
+    throws('a corrupt _state.json is refused', () => unbuild(root, 'shared'), /not valid JSON/);
+    check('and left exactly as it was',
+      fs.readFileSync(pathm.join(root, 'queue/_state.json'), 'utf8'), '{ not json');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 section('edit — appending and removing sections');
 {
   const e = require('./lib/edit');
