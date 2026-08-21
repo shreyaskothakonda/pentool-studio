@@ -350,6 +350,9 @@ button.icon svg { display: block; }
 }
 .note.success { background: var(--greenBackground); color: var(--actionPrimaryText); }
 .note.error   { background: var(--redBackground);   color: var(--actionPrimaryText); }
+/* Saved, but something about it will stop it building — a capture on no page, a
+   dump with no wf: lines. Not a failure, so not red; not fine either. */
+.note.warn    { background: var(--yellowBackground); color: var(--actionPrimaryText); }
 .note .mark { flex: none; width: 16px; text-align: center; }
 .note .body { flex: 1; min-width: 0; }
 .note .close {

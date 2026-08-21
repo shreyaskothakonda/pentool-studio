@@ -299,6 +299,18 @@ console.log('\nuseStyleGuide — a project replaces the shipped defaults');
 
   var p3 = t.useStyleGuide(null);
   check('no guide at all restores the defaults', p3.known.has('heading-style-h2'), true);
+
+  /* Which components already exist is a fact about one Webflow site, so there is
+     no honest default. It used to ship a previous client's list, and the failure
+     was silent and total: any layer named `label` matched, was marked reuse, and
+     was never walked — its contents vanished from the capture, and the build
+     skill was then told never to rebuild it. Empty is the only safe value. */
+  check('no components are assumed built', p3.built, []);
+  check('and an unconnected file assumes none either', t.PROFILE.built, []);
+
+  var p4 = t.useStyleGuide({ built: ['pricing-card'] });
+  check('a project supplies the real list', p4.built, ['pricing-card']);
+
   t.useStyleGuide(null);   // leave the module as the rest of the suite expects
 }
 

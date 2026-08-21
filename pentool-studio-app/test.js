@@ -680,7 +680,11 @@ section('bridge — writeSection');
 {
   const { writeSection } = require('./lib/bridge');
   const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const dump = 'frame "hero"  1440x600\n  wf: Section .section_hero   [new]\n';
+  // The real shape: every plugin dump opens with the contract header, and
+  // writeSection's note recovery anchors on it. A fixture without it would test
+  // a format that never reaches disk.
+  const dump = '=== BUILD CONTRACT (webflow / client-first) ===\n'
+             + 'frame "hero"  1440x600\n  wf: Section .section_hero   [new]\n';
 
   {
     const root = fixture({ 'queue/_config.json': CONFIG });
@@ -704,6 +708,64 @@ section('bridge — writeSection');
     const root = fixture({ 'queue/_config.json': CONFIG });
     const r = writeSection(root, { name: 'raw', dump: 'frame "hero"  1440x600\n' });
     check('flags a dump with no wf: lines', /nothing here can be built/.test(r.warning), true);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    /* A section saved with no page is written correctly and then never built.
+       Before this warned, the only signal was a queue problem found much later. */
+    const root = fixture({ 'queue/_config.json': CONFIG });
+
+    let r = writeSection(root, { name: 'orphan', dump, target: { kind: 'section' } });
+    check('a section on no page says so', /on no page/.test(r.warning), true);
+
+    r = writeSection(root, { name: 'placed', dump, target: { kind: 'section', page: '/markets' } });
+    check('a section with a page does not', /on no page/.test(r.warning || ''), false);
+
+    // Neither of these has a page to miss.
+    r = writeSection(root, { name: 'a-comp', dump, target: { kind: 'component' } });
+    check('a new component is exempt', /on no page/.test(r.warning || ''), false);
+    r = writeSection(root, { name: 'an-upd', dump, target: { kind: 'update', component: { id: 'c1' } } });
+    check('an update is exempt', /on no page/.test(r.warning || ''), false);
+
+    // Two things wrong at once used to report only the first.
+    r = writeSection(root, { name: 'both', dump: '=== BUILD CONTRACT ===\nframe "x"  10x10\n', target: { kind: 'section' } });
+    check('both warnings are reported',
+      /nothing here can be built/.test(r.warning) && /on no page/.test(r.warning), true);
+
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    /* Replace is about to become routine in the plugin, and it used to throw
+       away the designer's notes every time. */
+    const root = fixture({ 'queue/_config.json': CONFIG });
+    const file = pathm.join(root, 'queue/sections/noted/section.md');
+
+    writeSection(root, { name: 'noted', dump, notes: 'Use the dark variant.' });
+    check('notes are written', /## Notes\n\nUse the dark variant\./.test(fs.readFileSync(file, 'utf8')), true);
+
+    writeSection(root, { name: 'noted', dump, force: true });
+    check('a replace with an empty notes box keeps them',
+      /## Notes\n\nUse the dark variant\./.test(fs.readFileSync(file, 'utf8')), true);
+
+    writeSection(root, { name: 'noted', dump, notes: 'Actually the light one.', force: true });
+    const md = fs.readFileSync(file, 'utf8');
+    check('typing new notes replaces them', /Actually the light one\./.test(md), true);
+    check('and the old ones are gone', /dark variant/.test(md), false);
+
+    // Multi-line notes are the normal case, and the pattern has to survive them.
+    writeSection(root, { name: 'noted', dump, notes: 'One.\n\nTwo.', force: true });
+    writeSection(root, { name: 'noted', dump, force: true });
+    check('multi-line notes survive a replace',
+      /## Notes\n\nOne\.\n\nTwo\.\n/.test(fs.readFileSync(file, 'utf8')), true);
+
+    // A section that never had notes must not grow an empty block.
+    writeSection(root, { name: 'plain', dump });
+    writeSection(root, { name: 'plain', dump, force: true });
+    check('no notes stays no notes',
+      /## Notes/.test(fs.readFileSync(pathm.join(root, 'queue/sections/plain/section.md'), 'utf8')), false);
+
     fs.rmSync(root, { recursive: true, force: true });
   }
 

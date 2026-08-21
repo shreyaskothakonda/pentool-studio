@@ -30,8 +30,18 @@ window.pentool.onPtyStatus((p) => {
   $('ptyText').textContent = ok ? 'claude' : (p.error || 'claude ' + p.state);
 });
 
+/* Everything the plugin sends, said out loud. The failure branch used to be
+   dropped on the floor: the app stayed silent while Figma showed the error, so a
+   capture that never arrived looked exactly like one that did. */
 window.pentool.onBridgeWrite((r) => {
-  if (r && r.ok) flashPrompt('received ' + r.section + (r.images.length ? ' +' + r.images.length + ' asset(s)' : ''));
+  if (!r) return;
+  if (!r.ok) return note('Figma capture failed: ' + (r.error || 'unknown error'), 'error');
+
+  note('received ' + r.section + (r.images.length ? ' +' + r.images.length + ' asset(s)' : ''),
+       r.warning ? 'warn' : 'success');
+  // Saved, but something about it will stop it building. Separate note, because
+  // it outlives the success one and needs reading.
+  if (r.warning) note(r.section + ': ' + r.warning, 'warn');
 });
 
 /* ──────────────────────────────── queue ─────────────────────────────── */
@@ -203,7 +213,7 @@ function renderProjects(payload) {
         const next = prompt('Rename this project', p.name || '');
         if (next === null) return;
         const r = await window.pentool.rename(p.root, next);
-        flashPrompt(r.ok ? 'Renamed to ' + r.name : (r.error || 'could not rename'));
+        r.ok ? note('Renamed to ' + r.name, 'success') : note(r.error || 'could not rename', 'error');
       };
       row.appendChild(ren);
     }
@@ -225,11 +235,21 @@ function renderProjects(payload) {
 function renderProject(payload) {
   $('projName').textContent = payload.ok ? payload.name : 'no project';
   $('projName').classList.toggle('none', !payload.ok);
-  if (!payload.ok && payload.error) flashPrompt(payload.error);
-  // The build cannot run without it, and the fix is one command — so say which.
-  if (payload.ok && payload.mcp && payload.mcp.configured === false) {
-    note('The ' + payload.mcp.name + ' MCP server is not set up. ' +
-         'Click to copy the command that adds it.', 'error');
+  if (!payload.ok && payload.error) note(payload.error, 'error');
+  /* The build cannot run without it, and the fix is one command — so say which.
+     Anything but a positive yes is worth saying. `configured === null` means
+     ~/.claude.json could not be read, which is what a machine that has never run
+     Claude Code looks like; warning only on an explicit `false` meant the
+     commonest case of all passed in silence. */
+  if (payload.ok && payload.mcp && payload.mcp.configured !== true) {
+    const unknown = payload.mcp.configured === null;
+    note(unknown
+      ? 'Pentool cannot tell whether the ' + payload.mcp.name + ' MCP server is set up — ' +
+        (payload.mcp.reason || 'the Claude Code config could not be read') + '. ' +
+        'If a build fails at its first Webflow call, this is why. Click to copy the command that adds it.'
+      : 'The ' + payload.mcp.name + ' MCP server is not set up. ' +
+        'Click to copy the command that adds it.',
+      unknown ? 'warn' : 'error');
     const last = document.querySelector('#noteStack .note:last-child');
     if (last) {
       last.style.cursor = 'pointer';
@@ -243,7 +263,7 @@ function renderProject(payload) {
   if (payload.ok && payload.synced && payload.synced.length) {
     // Say it rather than fixing it silently: a project carries frozen copies of
     // lib/ and bin/, and this is the moment they stopped being stale.
-    flashPrompt('updated project tooling: ' + payload.synced.join(', '));
+    note('updated project tooling: ' + payload.synced.join(', '), null);
   }
 }
 
@@ -288,7 +308,7 @@ window.pentool.onUpdate((u) => {
     bar.hidden = true;
     // Only a person who clicked gets told there was nothing; the scheduled
     // check stays silent, which is the whole point of it being scheduled.
-    if (u.manual) flashPrompt('Pentool ' + u.current + ' is the latest version');
+    if (u.manual) note('Pentool ' + u.current + ' is the latest version', 'success');
     return;
   }
 
@@ -478,14 +498,14 @@ function render(snap) {
       stop.title = 'Interrupt the agent (Esc)';
       stop.onclick = async () => {
         const r = await window.pentool.stopBuild();
-        flashPrompt(r.ok ? 'Sent interrupt.' : (r.error || 'could not stop'));
+        r.ok ? note('Sent interrupt.', 'success') : note(r.error || 'could not stop', 'error');
       };
       h.appendChild(stop);
     } else {
       const build = el('button', 'primary', 'Start build');
       build.onclick = async () => {
         const r = await window.pentool.startBuild(pageName);
-        if (!r.ok) flashPrompt(r.error);
+        if (!r.ok) note(r.error, 'error');
         else openDrawer();
       };
       h.appendChild(build);
@@ -554,9 +574,12 @@ function render(snap) {
         const r = await window.pentool.removeSection({
           section: s.section, pageFile: s.pageFile, alsoDelete: both
         });
-        flashPrompt(r.ok
-          ? 'Removed from ' + (r.pages.join(', ') || 'no page') + (r.trashed ? ' → ' + r.trashed : '')
-          : (r.error || 'could not remove'));
+        // "Removed from no page" is a success, and the old severity guess
+        // turned its "no " into a red note that never went away.
+        r.ok
+          ? note('Removed from ' + (r.pages.join(', ') || 'no page') +
+                 (r.trashed ? ' → ' + r.trashed : ''), 'success')
+          : note(r.error || 'could not remove', 'error');
       };
       actions.appendChild(del);
 
@@ -565,8 +588,8 @@ function render(snap) {
       attach.onclick = async (e) => {
         e.stopPropagation();
         const r = await window.pentool.attachSection(s);
-        flashPrompt(r.ok ? 'Attached ' + s.section + ' — press return to send.'
-                         : (r.error || 'could not attach'));
+        r.ok ? note('Attached ' + s.section + ' — press return to send.', 'success')
+             : note(r.error || 'could not attach', 'error');
         if (r.ok) openDrawer();
       };
       actions.appendChild(attach);
@@ -644,7 +667,7 @@ function wireDrag(row) {
     const to = Number(row.dataset.index);
     if (to === dragFrom.index) return;
     const r = await window.pentool.reorder(dragFrom.pageFile, dragFrom.index, to);
-    if (!r.ok) flashPrompt('reorder failed: ' + r.error);
+    if (!r.ok) note('reorder failed: ' + r.error, 'error');
     dragFrom = null;
   });
 }
@@ -654,7 +677,7 @@ function wireDrag(row) {
 function sendToClaude(text) {
   if (window.__agentMode === 'messages') { window.pentool.say(text); return; }
   window.pentool.ptyWrite(text + '\r');
-  flashPrompt('sent: ' + text);
+  note('sent: ' + text, null);
 }
 
 let flashTimer = null;
@@ -674,7 +697,8 @@ function note(msg, variant) {
 
   const mark = document.createElement('span');
   mark.className = 'mark';
-  mark.textContent = variant === 'success' ? '✓' : variant === 'error' ? '!' : '·';
+  mark.textContent = variant === 'success' ? '✓' : variant === 'error' ? '!'
+                   : variant === 'warn' ? '▲' : '·';
 
   const body = document.createElement('span');
   body.className = 'body';
@@ -688,14 +712,11 @@ function note(msg, variant) {
 
   el_.appendChild(mark); el_.appendChild(body); el_.appendChild(close);
   stack.appendChild(el_);
-  // Errors stay until dismissed; the rest are transient.
-  if (variant !== 'error') setTimeout(() => el_.remove(), 4000);
+  // Errors and warnings stay until dismissed; the rest are transient. A warning
+  // says something was saved but will not build — it has to be read to be acted on.
+  if (variant !== 'error' && variant !== 'warn') setTimeout(() => el_.remove(), 4000);
 }
 
-// Kept so the 15 existing call sites keep working, now routed to a real Note.
-function flashPrompt(msg) {
-  note(msg, /could not|refused|failed|no |error/i.test(msg) ? 'error' : null);
-}
 
 $('promptForm').onsubmit = (e) => {
   e.preventDefault();
@@ -751,6 +772,14 @@ async function refreshSnapshot() {
     tag.textContent = '';
     tag.className = 'tag';
     tag.title = '';
+    return;
+  }
+  // Cannot tell. Distinct from "none taken" so the reason is not misread as a
+  // finding, but still `bad`, because proceeding on an unknown is the risk.
+  if (st.unknown) {
+    tag.textContent = 'snapshot ?';
+    tag.className = 'tag bad';
+    tag.title = st.reason;
     return;
   }
   if (st.required) {

@@ -177,10 +177,11 @@ function writeSection(root, payload) {
 
   // Preserve hand-written frontmatter across a re-send; only the dump refreshes.
   let head = frontmatter(name, hasWf);
+  let prevText = null;
   if (exists && fs.existsSync(file)) {
-    const prev = fs.readFileSync(file, 'utf8');
-    const end = prev.indexOf('\n---', 3);
-    if (/^---\s*\n/.test(prev) && end !== -1) head = prev.slice(0, end + 4) + '\n';
+    prevText = fs.readFileSync(file, 'utf8');
+    const end = prevText.indexOf('\n---', 3);
+    if (/^---\s*\n/.test(prevText) && end !== -1) head = prevText.slice(0, end + 4) + '\n';
   }
 
   // The plugin picked a Webflow page and/or component: record it where the
@@ -198,7 +199,29 @@ function writeSection(root, payload) {
      inert to the parser — classesInDump and reusedComponents only look for
      `wf:` lines — so it costs the pipeline nothing. */
   const notes = String(payload.notes || '').trim();
-  const noteBlock = notes ? '## Notes\n\n' + notes + '\n\n' : '';
+  let noteBlock = notes ? '## Notes\n\n' + notes + '\n\n' : '';
+
+  /* A replace with an empty Notes box keeps whatever was there before. The
+     frontmatter above already survives a re-send; notes did not, so recapturing
+     a frame to refresh its dump silently threw away what the designer had
+     written about it — and offering Replace in the plugin is about to make
+     recapturing the normal thing to do. Typing new notes still replaces them.
+
+     Where the block ends is the whole difficulty: notes are prose and usually
+     contain blank lines, so "up to the first blank line" truncates them. The
+     dump that follows always opens with its contract header, and that header
+     is the only thing in the file that starts a line with `===` — prose does
+     not. Anchoring there takes the notes whole. Anything unrecognised is left
+     alone rather than half-recovered. */
+  if (!notes && exists && prevText) {
+    const OPEN = '\n## Notes\n\n';
+    const at = prevText.indexOf(OPEN);
+    if (at !== -1) {
+      const body = prevText.slice(at + OPEN.length);
+      const ends = body.indexOf('\n\n===');
+      if (ends !== -1) noteBlock = '## Notes\n\n' + body.slice(0, ends) + '\n\n';
+    }
+  }
 
   // The capture is written FIRST. Placing it on a page can fail — a hand-edited
   // manifest missing its `sections:` key throws — and doing that first meant the
@@ -255,6 +278,27 @@ function writeSection(root, payload) {
     written.push(fname);
   }
 
+  /* More than one thing can be wrong with an otherwise-successful save, and
+     until now only the first was ever reported. `warning` stays a string
+     because the plugin and the app both render it as one. */
+  const warnings = [];
+  if (queueError) warnings.push(queueError);
+  if (!hasWf) warnings.push('no "wf:" lines — nothing here can be built');
+
+  /* The quiet failure this whole field exists for. A section saved with no page
+     is written correctly and then never built, and the only other signal is a
+     queue warning the user has to go looking for — by which time they have
+     captured five more.
+
+     Only for the two kinds that are meant to land on a page. `update` changes a
+     component wherever it already is and `component` creates one to be placed
+     later, so neither has a page to miss. A payload with no `kind` at all is a
+     bare API call from something managing its own manifests — not ours to
+     second-guess. */
+  if (!queuedOn && (target.kind === 'section' || target.kind === 'page')) {
+    warnings.push('saved, but on no page — nothing will build it until a page lists it');
+  }
+
   return {
     ok: true,
     section: name,
@@ -264,7 +308,7 @@ function writeSection(root, payload) {
     queueError: queueError,
     notes: !!notes,
     replaced: exists,
-    warning: queueError || (hasWf ? null : 'no "wf:" lines — nothing here can be built')
+    warning: warnings.length ? warnings.join(' · ') : null
   };
 }
 

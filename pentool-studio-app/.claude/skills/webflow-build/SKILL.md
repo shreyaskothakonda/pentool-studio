@@ -275,7 +275,7 @@ Then **stop**. Report what was built and wait for the go-ahead.
 | `Link .x_component` | `LinkBlock` (+ `set_link`) |
 | `Image .x_image` | `Image` + `set_image_asset` + alt |
 | `HtmlEmbed .icon-embed-medium` | `HtmlEmbed` carrying the matching `SVG SOURCES` entry |
-| `REUSE component "label"` | `data_component_builder` |
+| `REUSE component "pricing-card"` | `data_component_builder` |
 
 **Never put text on a DivBlock.** `set_text` is only valid on text-capable
 elements; on a DivBlock it silently no-ops. Use `TextBlock` or `Paragraph`.

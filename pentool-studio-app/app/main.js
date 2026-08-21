@@ -157,9 +157,13 @@ function mcpStatus() {
     const cfg = JSON.parse(fs.readFileSync(path.join(app.getPath('home'), '.claude.json'), 'utf8'));
     configured = !!(cfg.mcpServers && cfg.mcpServers[want]);
   } catch (e) {
-    return { name: want, configured: null, add };   // no CLI config to read
+    /* Missing or unreadable ~/.claude.json — which is exactly what a machine
+       that has never run Claude Code looks like. `null` is "cannot tell", and
+       it is emphatically not the same as "fine": the renderer used to warn only
+       on an explicit false, so the commonest case of all was silent. */
+    return { name: want, configured: null, add, reason: '~/.claude.json could not be read' };
   }
-  return { name: want, configured, add };
+  return { name: want, configured, add, reason: null };
 }
 
 ipcMain.handle('mcp:status', () => mcpStatus());
@@ -579,7 +583,16 @@ ipcMain.handle('snapshot:status', () => {
   // Must match the shape the header reads. Returning {owed, note} left `required`
   // undefined, so with no project open the header claimed a snapshot existed.
   if (!ROOT) return { required: false, reason: 'no project open', newest: null, noProject: true };
-  if (!snapshotLib) return { required: false, reason: 'snapshot lib unavailable' };
+  /* A project scaffolded before lib/snapshot.js existed. `required: false` read
+     as `snapshot ✓` in the header — the app asserting a backup exists for the
+     one thing in this pipeline that has no undo. Not knowing must look like not
+     knowing. `required: true` also makes an older renderer fail safe. */
+  if (!snapshotLib) {
+    return {
+      required: true, unknown: true, newest: null,
+      reason: 'this project has no lib/snapshot.js — Pentool cannot tell whether a snapshot exists'
+    };
+  }
   try { return snapshotLib.snapshotStatus(ROOT); }
   catch (e) { return { required: true, reason: e.message }; }
 });

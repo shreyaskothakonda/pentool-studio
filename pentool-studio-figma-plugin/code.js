@@ -20,9 +20,21 @@
 
 const DEFAULT_PROFILE = {
 
-  // Components already built in Webflow. Instances of these are referenced by
-  // name and never walked — the builder must reuse them, not rebuild them.
-  built: ['label', 'market-card', 'action-card'],
+  /* Components already built in Webflow. An instance of one of these is
+     referenced by name and never walked — the builder reuses it rather than
+     rebuilding it.
+
+     Empty on purpose, and it must stay empty. Which components exist is a fact
+     about one Webflow site, so a default here is right for exactly one project
+     and wrong everywhere else — and it fails silently: a layer whose name
+     happens to match is dropped from the capture entirely, and the build skill
+     is then told never to rebuild it. Better to walk a node that could have
+     been reused than to lose one.
+
+     The real list arrives per project: the build skill's preflight fills it in
+     from Webflow with `wf-styleguide.js set --built`, and the bridge hands it
+     over on /hello. */
+  built: [],
 
   // rem values are the Relume defaults. If your style guide overrides them,
   // correct them here — Pentool Studio picks the nearest match, so being wrong shifts
