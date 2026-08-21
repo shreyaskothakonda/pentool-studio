@@ -221,26 +221,72 @@ function loadPages(root, problems) {
 }
 
 /* ══════════════════════════════════ status ══════════════════════════════════
-   Four states, and only one of them is new data.
+   Five states.
 
      done      the section is in _done/, or _state.json records it built on
                this page — a section on three pages can be done on one of them
-     building  the agent is on it right now (_state.json.building)
+     building  its build-log.md is being written right now
+     stalled   it has a build log, unfinished, and nothing has touched it in
+               STALE_AFTER_MS — a run that died partway
      blocked   a validation error names it, so it cannot build as it stands
      queued    everything else: on a page, waiting its turn
 
+   `building` is derived from build-log.md rather than recorded anywhere. The
+   build skill already has to write that log as it goes, and already justifies it
+   by crash recovery — so it is an artifact the agent keeps for its own sake,
+   which is what makes it survive a real run. A flag the agent had to set and
+   clear would be one more step to forget, and a crash would strand it set: a
+   lie that outlives the run. `_state.json.building` is still honoured if
+   anything ever writes it; nothing does today.
+
+   `stalled` exists because a crashed build used to read `queued` forever, which
+   is precisely backwards — the queue hid the one section that needed a human.
+
    A section that is on NO page never becomes a step at all, so it cannot carry a
    status here — it surfaces as the "not referenced by any page" warning instead. */
+
+/* Ten minutes. Long enough that a slow stretch between log writes is never
+   mistaken for a crash — the visual check publishes to staging and screenshots,
+   which is a genuinely long gap — and short enough that a dead run is visible
+   before you have watched a "queued" row for a quarter of an hour. A false
+   `stalled` is worse than a late one; if a healthy build ever flickers, raise it. */
+const STALE_AFTER_MS = 10 * 60 * 1000;
+
+/* What the section's own build log says about it, or nothing at all.
+
+   Never throws: resolve() is what the CLI, the app, the bridge and the plugin
+   all call, and an unreadable log must not be able to take the queue down. */
+function sectionProgress(dir, now) {
+  try {
+    const file = path.join(dir, 'build-log.md');
+    const st = fs.statSync(file);
+    const text = fs.readFileSync(file, 'utf8');
+    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+    const note = lines.length ? lines[lines.length - 1] : null;
+
+    if (/(^|\n)\s*done\b/i.test(text)) return { state: 'logged-done', note: note, at: st.mtimeMs };
+    const age = (now || Date.now()) - st.mtimeMs;
+    return { state: age > STALE_AFTER_MS ? 'stalled' : 'building', note: note, at: st.mtimeMs };
+  } catch (e) {
+    return { state: 'pending', note: null, at: null };
+  }
+}
 
 function readState(root) {
   const st = readJson(path.join(root, 'queue', '_state.json'), null);
   return st && typeof st === 'object' ? st : { built: {}, building: null };
 }
 
-function stepStatus(sec, page, state, problems) {
+function stepStatus(sec, page, state, problems, progress) {
   if (sec.done) return 'done';
   const built = (state.built && state.built[page]) || [];
   if (built.indexOf(sec.name) !== -1) return 'done';
+
+  // Live, from the log. Ahead of `blocked` on purpose: if it is being written to
+  // right now, that is the more useful thing to say about it.
+  if (progress && progress.state === 'building') return 'building';
+  if (progress && progress.state === 'stalled') return 'stalled';
+
   if (state.building === sec.name) return 'building';
   if (problems.some((p) => p.level === 'error' && p.where === sec.name)) return 'blocked';
   return 'queued';
@@ -288,6 +334,9 @@ function resolve(root) {
         });
       }
 
+      // Once per step, not once per consumer.
+      const prog = sectionProgress(sec.dir);
+
       steps.push({
         page: d.page,
         pageFile: path.basename(page.file),
@@ -301,7 +350,8 @@ function resolve(root) {
         // — an unknown section produces none — so the rendered order is not a
         // safe index to reorder by.
         manifestIndex: mi,
-        status: stepStatus(sec, d.page, state, problems),
+        status: stepStatus(sec, d.page, state, problems, prog),
+        progress: prog,
         build: sec.build,
         group: sec.group || (config && config.componentGroup) || null,
         props: sec.props || null,
@@ -319,12 +369,30 @@ function resolve(root) {
     }
   }
 
+  /* The gap a crash leaves. Marking a section built and moving it to _done/ are
+     two steps, so dying between them leaves a finished log and no record of it —
+     and the section then queues up to be built a second time, onto a page that
+     already has it. Invisible until now. */
+  for (const [name, sec] of sections) {
+    if (sec.done) continue;
+    const prog = sectionProgress(sec.dir);
+    if (prog.state !== 'logged-done') continue;
+    const anywhere = Object.keys(state.built || {}).some((pg) => (state.built[pg] || []).indexOf(name) !== -1);
+    if (!anywhere) {
+      problems.push({
+        level: 'warn', where: name,
+        msg: 'build-log.md says done but nothing recorded it as built — check the site before building it again'
+      });
+    }
+  }
+
   return { config, sections, pages, steps, problems };
 }
 
 const errorsIn = (problems) => problems.filter((p) => p.level === 'error');
 
 module.exports = {
-  resolve, classesInDump, reusedComponents, errorsIn, stepStatus,
+  resolve, classesInDump, reusedComponents, errorsIn, stepStatus, sectionProgress,
+  STALE_AFTER_MS,
   PROP_TYPES, BUILD_MODES, POSITIONS
 };

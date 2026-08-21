@@ -292,6 +292,7 @@ main { flex: 1; display: flex; min-height: 0; }
 .status.st-done     { color: var(--greenText); }
 .status.st-building { color: var(--blueText); }
 .status.st-blocked  { color: var(--redText); font-weight: 700; }
+.status.st-stalled  { color: var(--yellowText); font-weight: 700; }
 .sec.is-done .name { color: var(--textInactive); text-decoration: line-through; }
 
 /* ─────────────────────────────── dialogs ─────────────────────────────── */
@@ -392,6 +393,16 @@ button.icon svg { display: block; }
 .sec .state-word.st-done     { color: var(--greenText); }
 .sec .state-word.st-building { color: var(--blueText); }
 .sec .state-word.st-blocked  { color: var(--redText); }
+.sec .state-word.st-stalled  { color: var(--yellowText); }
+
+/* What the agent is doing to this section right now, read from the last line
+   of its build log. One line, ellipsised: it updates constantly and a row that
+   changes height on every write is unreadable. */
+.sec .note-line {
+  font-size: var(--font-size-small); color: var(--blueText);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sec .note-line.cold { color: var(--yellowText); }
 .sec .actions { flex: none; display: flex; gap: var(--s1); opacity: 0; }
 .sec:hover .actions, .sec:focus-within .actions { opacity: 1; }
 .sec.is-done .name { color: var(--text2); text-decoration: none; }

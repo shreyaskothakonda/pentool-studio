@@ -238,6 +238,9 @@
   .qrow .n.st-done     { color: var(--ok); }
   .qrow .n.st-building { color: var(--brand); }
   .qrow .n.st-blocked  { color: var(--warn); font-weight: 700; }
+  /* A build that died partway. Free here: the status is derived in the app's
+     queue library, so this panel sees the same thing the app window does. */
+  .qrow .n.st-stalled  { color: var(--warn); font-weight: 700; }
   .qrow.is-done .nm { color: var(--fg-2); text-decoration: line-through; }
   .qrow .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .qrow .meta { color: var(--fg-2); font-size: 10px; }
@@ -851,7 +854,7 @@
       var row = document.createElement('div');
       row.className = 'qrow' + (st.status === 'done' ? ' is-done' : '');
 
-      var MARK = { done: '✓', building: '◐', blocked: '!', queued: '○' };
+      var MARK = { done: '✓', building: '◐', stalled: '!', blocked: '!', queued: '○' };
       var num = document.createElement('span');
       num.className = 'n st-' + (st.status || 'queued');
       num.textContent = MARK[st.status] || '○';

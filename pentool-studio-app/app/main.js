@@ -268,7 +268,11 @@ function snapshot() {
   const st = state();
   const steps = r.steps.map((s) => {
     const built = (st.built[s.page] || []).indexOf(s.section) !== -1;
-    const prog = built ? { state: 'done', note: null } : progressFor(s.dir);
+    /* The library derives this now, so the CLI, the bridge and the plugin's own
+       queue panel all agree with this window. The local read stays as a fallback:
+       a project carries a frozen copy of lib/, and syncTooling swallows its own
+       errors on a folder it cannot write to. */
+    const prog = built ? { state: 'done', note: null } : (s.progress || progressFor(s.dir));
     return Object.assign({}, s, { built, progress: prog });
   });
   return {
@@ -297,6 +301,10 @@ function watchQueue() {
     // recursive watch is unsupported on some filesystems; fall back to polling
     pollTimer = setInterval(pushSnapshot, 3000);
   }
+  /* Going stale is the passage of time, not a file change, so no watcher will
+     ever fire for it. Without this a dead build sits reading `building` until
+     something else happens to touch the queue. */
+  staleTimer = setInterval(pushSnapshot, 15000);
 }
 
 /* ──────────────────────────────── bridge ─────────────────────────────── */
@@ -886,6 +894,7 @@ ipcMain.on('pty:restart', () => {
 let activeName = null;
 let watcher = null;
 let pollTimer = null;
+let staleTimer = null;
 
 function tearDown() {
   stopAgent();
@@ -895,6 +904,7 @@ function tearDown() {
   bridgeStatus = { state: 'starting', port: null, token: null, error: null };
   if (watcher) { try { watcher.close(); } catch (e) { /* already closed */ } watcher = null; }
   if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (staleTimer) { clearInterval(staleTimer); staleTimer = null; }
   clearTimeout(watchTimer);
 }
 

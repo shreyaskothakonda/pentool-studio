@@ -885,6 +885,62 @@ section('queue — status and finished sections');
   }
 
   {
+    /* Live status, derived from the log the build skill already writes. Before
+       this, a section went queued straight to done and nothing moved for the
+       minutes in between. */
+    const root = mk({});
+    const log = pathm.join(root, 'queue/sections/beta/build-log.md');
+    const statusOf = () => {
+      const by = {}; resolve(root).steps.forEach((st) => { by[st.section] = st.status; });
+      return by;
+    };
+
+    check('no log at all is queued', statusOf().beta, 'queued');
+
+    fs.writeFileSync(log, 'started 2026-08-22T10:00:00Z\nuploaded hero.png\n');
+    check('a log being written reads building', statusOf().beta, 'building');
+    check('and the last line is carried for display',
+      resolve(root).steps.find((st) => st.section === 'beta').progress.note, 'uploaded hero.png');
+
+    // A run that died. This used to read `queued` forever — the queue hiding the
+    // one section that needed a human.
+    const old = (Date.now() - 40 * 60 * 1000) / 1000;
+    fs.utimesSync(log, old, old);
+    check('an untouched log goes stalled', statusOf().beta, 'stalled');
+
+    // Finished, but nothing recorded it: the gap a crash leaves between marking
+    // built and moving to _done/.
+    fs.appendFileSync(log, 'done 2026-08-22T10:09:00Z\n');
+    const r2 = resolve(root);
+    const by2 = {}; r2.steps.forEach((st) => { by2[st.section] = st.status; });
+    check('a finished log alone does not claim done', by2.beta, 'queued');
+    check('it warns instead', r2.problems.some((pr) =>
+      pr.where === 'beta' && /says done but nothing recorded it/.test(pr.msg)), true);
+    check('and that is a warning, not an error', errorsIn(r2.problems).length, 0);
+
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // _state.json is the authority on done. A stale log cannot un-finish it.
+    const root = mk({ 'queue/_state.json': JSON.stringify({ built: { '/p': ['beta'] } }) });
+    fs.writeFileSync(pathm.join(root, 'queue/sections/beta/build-log.md'), 'started\nhalfway\n');
+    const by = {}; resolve(root).steps.forEach((st) => { by[st.section] = st.status; });
+    check('recorded built outranks a live log', by.beta, 'done');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // An unreadable log must never take the whole queue down with it.
+    const { sectionProgress } = require('./lib/queue');
+    check('a missing folder is just pending', sectionProgress('/nope/nowhere').state, 'pending');
+    const root = mk({});
+    fs.mkdirSync(pathm.join(root, 'queue/sections/alpha/build-log.md'));  // a directory, not a file
+    check('resolve survives a log it cannot read', resolve(root).steps.length, 3);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
     // built on one page is not built on another
     const root = fixture({
       'queue/_config.json': CONFIG,

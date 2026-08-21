@@ -492,7 +492,8 @@ function render(snap) {
     h.appendChild(el('span', 'file', steps[0].pageFile));
     // Scoped to this page: one section building elsewhere used to put "Stop
     // build" on every page card, so the button lied about what it would stop.
-    const anyBuilding = steps.some((s) => (s.status || '') === 'building');
+    // `stalled` too: a wedged run is exactly when you need the stop button.
+    const anyBuilding = steps.some((s) => ['building', 'stalled'].indexOf(s.status || '') !== -1);
     if (anyBuilding) {
       const stop = el('button', 'danger', 'Stop build');
       stop.title = 'Interrupt the agent (Esc)';
@@ -540,9 +541,17 @@ function render(snap) {
       if (s.assets.length) bits.push(s.assets.length + ' asset' + (s.assets.length === 1 ? '' : 's'));
       if (s.reuse.length) bits.push('reuse ' + s.reuse.join(', '));
       const meta = el('span', 'meta', bits.join(' · '));
-      // build-log.md's last line is the only detail the status itself lacks.
-      if (s.progress && s.progress.note) meta.title = s.progress.note;
       lines.appendChild(meta);
+
+      /* The last line of build-log.md — what the agent is doing to this section
+         right now. It was computed all along and put in a `title`, so the only
+         live signal in the whole window was behind a hover nobody knew to try. */
+      if (s.progress && s.progress.note && (status === 'building' || status === 'stalled')) {
+        const live = el('span', 'note-line', s.progress.note);
+        live.title = s.progress.note;          // the untruncated text, still
+        if (status === 'stalled') live.classList.add('cold');
+        lines.appendChild(live);
+      }
       row.appendChild(lines);
 
       row.appendChild(el('span', 'state-word st-' + status, status));
@@ -622,7 +631,7 @@ function renderProgress(snap) {
   box.textContent = '';
   // One source for status, so this pane and the queue can never disagree.
   const statusOf = (s) => s.status || (s.built ? 'done' : 'queued');
-  const MARK = { done: '✓', building: '◐', blocked: '!', queued: '○' };
+  const MARK = { done: '✓', building: '◐', stalled: '!', blocked: '!', queued: '○' };
 
   const active = snap.steps.filter((s) => statusOf(s) !== 'queued');
   const list = active.length ? active : snap.steps;

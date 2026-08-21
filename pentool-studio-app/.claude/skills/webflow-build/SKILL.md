@@ -104,9 +104,17 @@ something the Figma file cannot say on its own. **Read it before deciding
 anything**, and say in `build-log.md` how you acted on it. It outranks your own
 reading of the dump where the two disagree.
 
-### 2.1 Resolve the target
+### 2.1 Open the log, then resolve the target
 
-Find the page id from `list_pages`. If it is missing and `create_if_missing` is
+**First act on any section, before anything else:** create
+`queue/sections/<name>/build-log.md` with a single line, `started <ISO time>`.
+
+It exists from this moment so that a crash at any later point still leaves a
+record of how far you got. It is also how Pentool knows this section is being
+worked on — a section with an open log reads `building` in the queue, and one
+whose log has not changed in ten minutes reads `stalled`. Nothing else tells it.
+
+Then find the page id from `list_pages`. If it is missing and `create_if_missing` is
 false, **stop** — do not invent a page. If true, `data_pages_tool > create_page`
 with `title` and the slug.
 
@@ -253,9 +261,28 @@ rendered DOM to explain a difference.
 node bin/wf-state.js mark-built "<page>" "<section>"
 ```
 
-Write `build-log.md` **inside the section folder as you go**, not at the end —
-assets uploaded, classes created, element ids, verification result. A crash must
-still leave an accurate record.
+Keep writing `build-log.md` **as you go**, not at the end — assets uploaded,
+classes created, element ids, verification result. A crash must still leave an
+accurate record.
+
+The format is load-bearing, so it is fixed:
+
+```
+started 2026-08-22T10:04:11Z
+uploaded hero.png → asset 65f…
+created .section_markets
+inserted Section into .main-wrapper → element 12a…
+done 2026-08-22T10:09:40Z
+```
+
+One line per thing that actually happened, in the order it happened. **The last
+line is shown live in Pentool while the section builds**, so write it as a
+statement of what is happening now — "uploading hero.png", "creating
+.markets_list" — never as a heading or a blank separator.
+
+The final line must be `done <ISO time>`. That word is what marks the section
+finished; without it Pentool goes on reporting the section as building, and then
+as stalled.
 
 Move fully built sections to `queue/_done/<section>/`, but only when every page
 that references them is done.
@@ -298,6 +325,9 @@ states are a known to-do rather than a silent omission.
 Stop immediately. Do not continue to the next section.
 
 - Leave the section in `queue/`; never mark it built.
+- **Leave `build-log.md` without its `done` line.** That absence is the signal:
+  the section shows as building, then stalled, which is how a human finds the
+  one that needs them. Writing `done` on a failed section hides it.
 - Report what was already written to Webflow, from `build-log.md`.
 - Say what a retry will skip and what it will redo.
 - Never retry a partially built section from zero — that duplicates elements.
