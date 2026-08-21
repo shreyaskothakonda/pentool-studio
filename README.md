@@ -28,8 +28,9 @@ works on the free plan.
 node bin/pentool-bridge.js     # prints a token on first run
 ```
 
-Paste that token into the plugin once. **Capture selection → send to queue** then
-lands the dump and its screenshots straight in `queue/sections/<name>/`.
+Then in the plugin press **Connect this file**, approve it in the browser tab
+that opens, and **Add to queue** lands the dump and its screenshots straight in
+`queue/sections/<name>/`. There is no token to copy — the approval hands it over.
 
 **The desktop app** — the bridge, the queue and Claude Code in one window:
 

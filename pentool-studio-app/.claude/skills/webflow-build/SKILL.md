@@ -243,9 +243,9 @@ looks nothing like the design.
    section order, spacing rhythm, type scale, colour, image placement, and whether
    anything is missing or doubled.
 
-   If there is no `_preview-*.png`, say so rather than skipping silently — the
-   **preview PNG** option in the plugin is off by default and has to be switched on for
-   this check to have anything to compare against.
+   If there is no `_preview-*.png`, say so rather than skipping silently. Every
+   capture exports one, so its absence means the section was captured by an older
+   build of the plugin — re-capture it and the comparison becomes possible.
 
 6. **Report differences in words**, ranked by how much they matter. Do not fix
    them silently. A pixel-perfect match is not the bar; "is this recognisably the

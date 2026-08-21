@@ -57,8 +57,9 @@ and is not uploaded.
 
 ## Rules worth knowing
 
-- Set Pentool Studio's target to **Webflow · Client-First**. A Raw Figma dump has no `wf:`
-  lines and the planner will warn.
+- Every capture carries `wf:` lines; there is no target to choose any more. A
+  dump without them is either hand-written or from an older plugin build, and
+  the planner warns because nothing in it can be built.
 - `props.target` and `cms.bind` keys must name classes that appear in the dump.
   The planner checks this.
 - Listing a `static` section on three pages duplicates its markup three times.

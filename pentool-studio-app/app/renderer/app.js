@@ -28,7 +28,15 @@ window.pentool.onPtyStatus((p) => {
   const ok = p.state === 'running';
   $('ptyDot').className = 'dot ' + (ok ? 'ok' : 'err');
   $('ptyText').textContent = ok ? 'claude' : (p.error || 'claude ' + p.state);
+  /* The app told people to "restart the agent" and had no way to do it — the
+     IPC was wired up in preload and never called from anywhere. */
+  $('ptyRestart').hidden = ok || p.state === 'starting';
 });
+
+$('ptyRestart').onclick = () => {
+  window.pentool.ptyRestart();
+  note('Starting the agent again…', null);
+};
 
 /* Everything the plugin sends, said out loud. The failure branch used to be
    dropped on the floor: the app stayed silent while Figma showed the error, so a
@@ -256,7 +264,8 @@ function renderProject(payload) {
       last.title = payload.mcp.add;
       last.addEventListener('click', async () => {
         await window.pentool.copyMcpAdd();
-        note('Command copied — run it in a terminal, then restart the agent.', 'success');
+        note('Command copied. Run it in a terminal, then press Restart in the header.', 'success');
+        checkMcp();
       });
     }
   }
@@ -265,6 +274,15 @@ function renderProject(payload) {
     // lib/ and bin/, and this is the moment they stopped being stale.
     note('updated project tooling: ' + payload.synced.join(', '), null);
   }
+}
+
+/* Ask again. The status is read once, when a project is activated, so after you
+   run the `claude mcp add` command the app went on insisting it was not set up
+   until you switched projects and back. */
+async function checkMcp() {
+  const mcp = await window.pentool.mcpStatus();
+  if (mcp && mcp.configured === true) note('The ' + mcp.name + ' MCP server is set up.', 'success');
+  return mcp;
 }
 
 /* ──────────────────────────── build again ────────────────────────────

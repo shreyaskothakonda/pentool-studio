@@ -114,11 +114,16 @@ function createProject(opts) {
     permissions: {
       allow: [
         `mcp__${mcpName}__*`,
+        // The visual check resizes a browser, navigates and screenshots — and
+        // `visual.enabled` is scaffolded true below, so without this the last
+        // step of every section stops for permission four times.
+        'mcp__chrome-devtools__*',
         'Bash(node bin/wf-queue.js:*)',
         'Bash(node bin/wf-state.js:*)',
         'Bash(node bin/wf-asset.js:*)',
         'Bash(node bin/wf-snapshot.js:*)',
         'Bash(node bin/wf-styleguide.js:*)',
+        'Bash(node bin/wf-unbuild.js:*)',
         'Read(queue/**)'
       ]
     }
@@ -129,9 +134,23 @@ function createProject(opts) {
      'queue/_pages.json', 'queue/_components.json', 'snapshots/', '.DS_Store', ''].join('\n'));
 
   fs.writeFileSync(path.join(root, 'README.md'),
-    `# ${opts.name}\n\nA Pentool project. Set \`siteId\` in \`queue/_config.json\`, then send\n` +
-    `sections from Figma with Pentool Studio.\n\n` +
-    `One agent per project. Run other projects in parallel; never two agents here.\n`);
+    `# ${opts.name}\n\n` +
+    `A Pentool project. Capture sections from Figma with Pentool Studio, then\n` +
+    `build them with \`/webflow-build\`.\n\n` +
+    `## Before the first build\n\n` +
+    `Pentool filled in \`siteId\` and \`siteName\` in \`queue/_config.json\`. These are\n` +
+    `yours to set, and nothing prompts for them:\n\n` +
+    `| key | what it is |\n| --- | --- |\n` +
+    `| \`defaultAnchor\` | the class of the wrapper sections are appended into. Guessed as \`main-wrapper\`; a build stops if the real one is named anything else. |\n` +
+    `| \`componentGroup\` | the Webflow component group new components go in. Needed for any \`build: component\` section. |\n` +
+    `| \`visual.baseUrl\` | your staging URL, e.g. \`https://acme.webflow.io\`. Empty here; the visual check needs it, and \`visual.enabled\` is already true. |\n\n` +
+    `The class inventory fills itself in from Webflow on the first build. Until\n` +
+    `then the plugin marks classes against Client-First defaults that may not be\n` +
+    `this site's — so the first capture is a guess, and worth re-capturing after.\n\n` +
+    `## Rules\n\n` +
+    `One agent per project. Run other projects in parallel; never two agents here.\n\n` +
+    `Webflow has no undo API. \`/webflow-snapshot\` records what the site looked\n` +
+    `like, but only a restore point made in the Designer can put it back.\n`);
 
   return { root, name, created: true };
 }

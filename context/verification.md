@@ -1,14 +1,22 @@
 # Verification record
 
-Last run: **2026-08-19**, on Node v26.7.0 / npm 11.19.0, macOS arm64.
+Last run: **2026-08-22**, on Node v26.7.0 / npm 11.19.0, macOS arm64.
 
 ## What passes
 
 | Check | Result |
 | --- | --- |
-| `pentool-studio-app` — `node test.js` | 156 passed, 0 failed |
-| `pentool-studio-figma-plugin` — `node test.js` | 81 passed, 0 failed |
-| `pentool-studio-figma-plugin` — `node test-e2e.js` | 17 passed, 0 failed |
+| `pentool-studio-app` — `node test.js` | 301 passed, 0 failed |
+| `pentool-studio-app/app` — `node test.js` | 38 passed, 0 failed |
+| `pentool-studio-figma-plugin` — `node test.js` | 139 passed, 0 failed |
+| `pentool-studio-figma-plugin` — `node test-e2e.js` | 26 passed, 0 failed |
+| Live build status | a written `build-log.md` reads `building` in the row with its last line visible; backdated, it reads `stalled` within one tick |
+| Capture with no page | the bridge warns and the app shows it — previously silent |
+| A capture the app refuses | shown as an error in the app; previously dropped |
+| 409 → **Replace** | second capture of a name offers Replace; the re-send keeps hand-written notes |
+| **Build again** | `done` → `queued`, `_done/` moves back, log archived, component and asset ids kept |
+| `node bin/wf-unbuild.js` | same, with the app closed; `--dry-run` changes nothing |
+| Agent **Restart** | appears on a real agent exit, and recovers the TUI |
 | `node bin/wf-queue.js plan` | 2 steps, 0 errors, 0 warnings |
 | `node bin/wf-snapshot.js status` | exits 1 — correct, the gate is unsatisfied until a snapshot is taken |
 | Bridge — health, auth, write, traversal guard | all correct |

@@ -38,10 +38,16 @@ markup per page.
 node bin/pentool-bridge.js          # prints a token on first run
 ```
 
-Paste the token into the plugin once, then **Pentool Studio selection → send to queue**. The
-dump and its screenshots land straight in `queue/sections/<name>/`. The plugin
-manifest needs `http://localhost:8930` in `devAllowedDomains` — the slot Figma
-provides for local servers, so production network access stays closed.
+In the plugin press **Connect this file**. It opens a browser tab asking you to
+approve this Figma file for this project; approving hands over the token, so
+there is nothing to copy. Then **Add to queue** lands the dump and its
+screenshots straight in `queue/sections/<name>/`.
+
+The plugin manifest needs `http://localhost:8930` in `devAllowedDomains` — the
+slot Figma provides for local servers, so production network access stays closed.
+That slot only applies to a plugin run from **Plugins → Development**; a copy
+imported any other way has all network access blocked, and every call to the app
+fails looking exactly like "not running".
 
 The bridge binds `127.0.0.1` only, requires the token on every request, slugifies
 names, and refuses to write outside `queue/sections/`. It writes files on POST, so
@@ -137,9 +143,20 @@ the design.
 4. Compares it with Pentool Studio's Figma export at `assets/_preview-*.png` and reports
    the differences in words, ranked by significance.
 
-**This needs Pentool Studio's "preview PNG" option switched on** — it is off by default, so
-without it there is no Figma reference to compare against. The skill says so rather
-than skipping quietly.
+It compares against the preview PNG the plugin exports with every capture. That
+export is unconditional — there is no option to switch on — so the only way to
+have nothing to compare against is a section captured before it was made
+unconditional. The skill says so rather than skipping quietly.
+
+**This needs the Chrome DevTools MCP server**, which is a separate install from
+the Webflow one and is not optional while `visual.enabled` is true — the value
+`createProject` scaffolds. Without it the build reaches its last step and stops:
+
+```sh
+claude mcp add --scope user chrome-devtools -- npx chrome-devtools-mcp@latest
+```
+
+Set `"enabled": false` if you would rather not have it, and the check is skipped.
 
 Configure it in `_config.json`:
 
@@ -162,11 +179,16 @@ The skill reads which server to use from `_config.json` rather than hardcoding i
 { "mcp": "webflow" }        // or "webflow-beta"
 ```
 
-Register the beta once and both stay connected:
+Both are added at **user scope**, once, and stay connected. A project-scoped
+server would need approving again in every new project:
 
 ```sh
-claude mcp add --transport http webflow-beta https://mcp.webflow.com/beta/mcp
+claude mcp add --scope user --transport sse  webflow      https://mcp.webflow.com/sse
+claude mcp add --scope user --transport http webflow-beta https://mcp.webflow.com/beta/mcp
 ```
+
+Pentool checks for whichever one `_config.json` names and offers to copy the
+command when it is missing.
 
 Flipping that one key is the whole switch. Preflight also verifies every tool it
 needs actually exists on the configured server and stops if one is missing —
@@ -203,6 +225,9 @@ Errors exit non-zero and block the build. Warnings do not.
 | `lib/project.js` | project scaffolding and the registry |
 | `lib/webflow.js` | Data API client — page and component listing, for the app's pickers |
 | `bin/wf-snapshot.js` | the snapshot gate: `status`, `list`, `session` |
+| `bin/wf-styleguide.js` | the site's real class inventory — `set --known-file`, `set --built`, `show` |
+| `bin/wf-unbuild.js` | put a finished section back in the queue: `<section> [page]`, `--dry-run` |
+| `lib/unbuild.js` | what that does — moves `_done/` back, forgets the build, archives the log |
 
 ## Resuming
 

@@ -24,13 +24,15 @@ start({
   console.log('pentool-bridge listening on http://127.0.0.1:' + b.port);
   console.log('writing into ' + path.relative(process.cwd(), path.join(ROOT, 'queue', 'sections')));
   console.log('\n  token: ' + b.token + '\n');
-  console.log('Paste that into the plugin once (Figma → Pentool Studio → send to queue).');
+  console.log('In Figma: Pentool Studio → Connect this file, then approve it in the browser.');
+  console.log('The approval hands the token over; there is nothing to paste.');
   console.log('Add http://localhost:' + b.port + ' to devAllowedDomains in the plugin manifest.');
 }).catch((err) => {
   if (err.friendly) {
     console.error('✗ ' + err.friendly);
     console.error('  Start on another port:  node bin/pentool-bridge.js --port 8931');
-    console.error("  Then set the same port in Relay and in the plugin's devAllowedDomains.");
+    console.error("  Then set bridgePort in queue/_config.json to match, and the same");
+    console.error("  port in the plugin's devAllowedDomains (manifest.json) and ui.html.");
   } else {
     console.error('✗ ' + err.message);
   }
