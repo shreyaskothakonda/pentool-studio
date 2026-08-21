@@ -1509,9 +1509,20 @@ figma.ui.onmessage = async (msg) => {
 
   const ui = msg.ui || {};
   const opts = resolveOpts(ui);
-  // Only what the user still controls is worth persisting.
-  try { await figma.clientStorage.setAsync(STORE_KEY, { rootRole: opts.rootRole, mode: ui.mode }); }
-  catch (e) { /* non-fatal */ }
+  /* Only what the user still controls is worth persisting.
+
+     `lastPage` is why Auto works at all: outside Manual there is no page picker
+     on screen, so without a remembered one every Auto capture landed attached to
+     nothing and was never built. `moreOpen` spares anyone who lives in More
+     options from re-opening it on every launch. */
+  try {
+    await figma.clientStorage.setAsync(STORE_KEY, {
+      rootRole: opts.rootRole,
+      mode: ui.mode,
+      moreOpen: !!ui.moreOpen,
+      lastPage: ui.page || (ui.mode !== 'manual' ? ui.lastPage : null) || null
+    });
+  } catch (e) { /* non-fatal */ }
 
   try {
     let roots = null;
@@ -1558,6 +1569,14 @@ figma.ui.onmessage = async (msg) => {
       name: result.name
     });
   } catch (err) {
-    figma.ui.postMessage({ type: 'error', message: String((err && err.stack) || err) });
+    /* Message and stack, separately. Sending the stack as the message put a
+       raw JS trace in the output box under the word "Error." — the thrown
+       messages here are written for people ("that frame no longer exists — pick
+       another") and were buried under it. */
+    figma.ui.postMessage({
+      type: 'error',
+      message: String((err && err.message) || err),
+      detail: String((err && err.stack) || '')
+    });
   }
 };

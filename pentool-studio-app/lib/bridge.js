@@ -49,7 +49,7 @@ function frontmatter(name, hasWf) {
     '---',
     `name: ${name}`,
     'build: static            # static | component',
-    '# group: GCE             # component group, when build: component',
+    '# group: Brand           # component group, when build: component',
     '#',
     '# props:                 # only when build: component',
     '#   - name: Title',

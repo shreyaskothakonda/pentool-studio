@@ -128,8 +128,12 @@
   .combo-empty { padding: var(--s1) var(--s2); color: var(--fg-2); }
 
   /* ── pickers ── */
+  /* A fixed label column, not `auto`. There are two of these grids now — the
+     common path and the one inside More options — and `auto` sizes each to its
+     own contents, so the labels landed 114px apart and the panel read as two
+     unrelated forms. 72px clears the longest label ("This is a") at 11px. */
   .pick {
-    display: grid; grid-template-columns: auto 1fr 1fr;
+    display: grid; grid-template-columns: 72px 1fr 1fr;
     gap: var(--s2); align-items: center; margin-bottom: var(--s2);
   }
   .pick .lbl { font-size: 11px; color: var(--fg-2); }
@@ -290,14 +294,6 @@
     <button id="modeCopy" aria-pressed="false">Just copy</button>
     <button id="modeAuto" aria-pressed="false">Auto</button>
   </span>
-  <span class="right hint">root is</span>
-  <select id="rootRole" style="width:auto">
-    <option value="auto">auto-detect</option>
-    <option value="section">section</option>
-    <option value="layout">layout</option>
-    <option value="component">component</option>
-    <option value="element">element</option>
-  </select>
 </div>
 
 <dl class="modehelp rule" id="modeHelp">
@@ -306,6 +302,10 @@
   <div data-mode="auto"><dt>Auto</dt><dd>Capture whatever is selected on the canvas and queue it.</dd></div>
 </dl>
 
+<!-- The common path, and only it: what you picked, what it is, where it goes.
+     Everything else is real and occasionally needed, so none of it is gone —
+     it is one click away in More options, and the summary there names anything
+     you have set so a non-default can never hide. -->
 <div class="pick" id="manual">
   <span class="lbl">Figma</span>
   <select id="fPage"><option value="">page…</option></select>
@@ -319,19 +319,6 @@
     <label><input type="radio" name="kind" value="update"> update a component</label>
   </div>
 
-  <span class="lbl" id="notesLbl">Notes</span>
-  <textarea id="notes" class="txt notes" rows="2"
-    placeholder="Anything the builder should know — a variant to use, copy to keep, something the design does not say."
-    style="grid-column:2/-1"></textarea>
-
-  <span class="lbl" id="eachLbl" hidden>Sections</span>
-  <label class="modes" id="eachWrap" hidden style="grid-column:2/-1">
-    <input type="checkbox" id="eachSection">
-    <span>Queue each section inside it separately</span>
-    <span class="hint" id="eachCount"></span>
-  </label>
-
-
   <span class="lbl" id="compLbl" hidden>Replaces</span>
   <select id="wComp" disabled hidden><option value="">component…</option></select>
   <span id="compPad" hidden></span>
@@ -339,14 +326,46 @@
   <span class="lbl" id="pageLbl">Page</span>
   <select id="wPage" disabled><option value="">page…</option></select>
   <span id="pagePad"></span>
-
-  <span class="lbl" id="newPageLbl" hidden>New page</span>
-  <input type="text" id="pageSlug" class="txt" placeholder="/about" hidden>
-  <input type="text" id="pageTitle" class="txt" placeholder="page title (optional)" hidden>
 </div>
+
+<!-- Its own .pick grid on purpose. The cells are laid out by a three-column
+     grid and setField() only toggles `hidden` on them; moving them under a
+     parent that is not that grid would put them in a different formatting
+     context and the alignment collapses. -->
+<details id="more">
+  <summary>More options<span class="hint right" id="moreSummary"></span></summary>
+  <div class="pick">
+    <span class="lbl">Root is</span>
+    <select id="rootRole"><option value="auto">auto-detect</option>
+      <option value="section">section</option>
+      <option value="layout">layout</option>
+      <option value="component">component</option>
+      <option value="element">element</option>
+    </select>
+    <span></span>
+
+    <span class="lbl" id="notesLbl">Notes</span>
+    <textarea id="notes" class="txt notes" rows="2"
+      placeholder="Anything the builder should know — a variant to use, copy to keep, something the design does not say."
+      style="grid-column:2/-1"></textarea>
+
+    <span class="lbl" id="eachLbl" hidden>Sections</span>
+    <label class="modes" id="eachWrap" hidden style="grid-column:2/-1">
+      <input type="checkbox" id="eachSection">
+      <span>Queue each section inside it separately</span>
+      <span class="hint" id="eachCount"></span>
+    </label>
+
+    <span class="lbl" id="newPageLbl" hidden>New page</span>
+    <input type="text" id="pageSlug" class="txt" placeholder="/about" hidden>
+    <input type="text" id="pageTitle" class="txt" placeholder="page title (optional)" hidden>
+  </div>
+</details>
 
 <div class="row actions-row">
   <button id="run">Add to queue</button>
+  <button id="replace" class="secondary" hidden
+    title="Overwrite the queued copy with this capture. Hand-edited frontmatter and notes are kept.">Replace</button>
   <button id="copy" class="secondary" disabled>Copy</button>
   <span class="spinner" id="spin" hidden></span>
   <span class="status" id="status">Pick a frame, then say what it is.</span>
@@ -401,6 +420,15 @@
                styleGuide: null, webflow: null };
   var mode = 'manual';
   var pages = [], frames = [], wPages = [], wComps = [];
+
+  /* The Webflow page last queued into. Auto and Just copy show no page picker,
+     so this is the only thing that keeps an Auto capture attached to anything.
+     Persisted with the other options, and named in the Auto legend. */
+  var lastPage = null;
+
+  // The payload of the last capture, held so Replace can re-send it with force
+  // after the queue refuses a name that already exists.
+  var lastPayload = null;
 
   function send(m) { parent.postMessage({ pluginMessage: m }, '*'); }
 
@@ -499,7 +527,21 @@
     conn.state = 'pairing'; paint();
     var start;
     try { start = await api('/pair/start', { method: 'POST' }); }
-    catch (e) { conn.state = 'absent'; paint(); return; }
+    catch (e) {
+      /* Every failure here used to read "the app is not running", which told
+         someone staring at an open app to open it. The distinction is exact: a
+         fetch that throws with no response means nothing answered; any HTTP
+         status at all means the app answered and refused. */
+      if (e.status) {
+        conn.state = 'found';
+        paint();
+        statusEl.textContent = e.status === 429
+          ? 'Too many connection attempts at once — wait a few seconds and press Connect again.'
+          : 'The Pentool Studio App refused the connection: ' + e.message;
+        return;
+      }
+      conn.state = 'absent'; paint(); return;
+    }
 
     // openExternal is a main-thread API — the iframe cannot call it.
     send({ type: 'openExternal', url: start.approveUrl });
@@ -742,6 +784,26 @@
       fill($('wComp'), [], 'connect the app to load components…');
     }
     mirrorDisabled();
+
+    /* A required field must never be behind a closed disclosure. Choosing
+       "＋ Create a new page…" reveals the slug input inside More options, and
+       with it shut the run guard said "give the new page a slug" while pointing
+       at something invisible. */
+    if (makingNew) $('more').open = true;
+
+    refreshMoreSummary();
+  }
+
+  /* What More options is hiding, named on the closed row. Anything you have set
+     stays visible as a word even when the control is not — a collapsed panel
+     that silently changes what gets captured would be worse than a long one. */
+  function refreshMoreSummary() {
+    var bits = [];
+    if ($('rootRole').value !== 'auto') bits.push('root: ' + $('rootRole').value);
+    if ($('notes').value.trim()) bits.push('notes');
+    if ($('eachSection').checked) bits.push('each section');
+    if (!$('pageSlug').hidden && $('pageSlug').value.trim()) bits.push($('pageSlug').value.trim());
+    $('moreSummary').textContent = bits.join(' · ');
   }
 
   // The search inputs stand in front of their selects, so they have to carry the
@@ -915,6 +977,13 @@
     });
     $('manual').hidden = m !== 'manual';
 
+    /* More options stays for every mode, because "root is" classifies the
+       capture in all three. The rest of what lives in there is Manual-only —
+       uiState() drops notes and eachSection outside it — so those cells go,
+       rather than offering controls whose values are discarded. */
+    var manualOnly = ['notesLbl', 'notes', 'eachLbl', 'eachWrap', 'newPageLbl', 'pageSlug', 'pageTitle'];
+    if (m !== 'manual') manualOnly.forEach(function (id) { setField(id, true); });
+
     // Auto is the copy-to-chat path: the dump IS the deliverable, so it stays
     // open. Manual sends to the queue, so the dump collapses to a receipt and
     // the queue takes its place.
@@ -930,9 +999,23 @@
       refreshManual();
     }
     clearOutput();
+    refreshMoreSummary();
+    refreshAutoHelp();
     statusEl.textContent = manual ? 'Pick a frame, then say what it is.'
       : m === 'copy' ? 'Capture and copy — nothing is queued.'
       : 'Select a frame, then capture.';
+  }
+
+  /* Auto queues, and where it queues to is not otherwise visible anywhere — it
+     reuses the page you last sent to. Saying which one turns a hidden default
+     into a stated one. */
+  function refreshAutoHelp() {
+    var row = $('modeHelp').querySelector('[data-mode="auto"] dd');
+    if (!row) return;
+    row.textContent = lastPage
+      ? 'Capture whatever is selected and queue it onto ' + lastPage + '.'
+      : 'Capture whatever is selected and queue it. Queue one section in Manual ' +
+        'first, and Auto will reuse that page.';
   }
   $('modeAuto').onclick = function () { setMode('auto'); };
   $('modeManual').onclick = function () { setMode('manual'); };
@@ -1001,6 +1084,13 @@
     var target = null;
     if (manual && (kind === 'section' || kind === 'page')) {
       target = makingNew ? (slug || null) : (chosen && chosen !== NEW_PAGE ? chosen : null);
+    } else if (!manual) {
+      /* Auto and Just copy have no page picker on screen, and Auto still queues.
+         It used to send nothing, so every Auto capture landed in the queue
+         attached to no page and was never built — silently, since the only
+         signal was a queue warning found much later. It reuses the page you last
+         queued into, which the mode legend names so it is never a surprise. */
+      target = lastPage || null;
     }
 
     return {
@@ -1009,6 +1099,8 @@
       site: conn.site || null,
       styleGuide: conn.styleGuide || null,
       rootRole: $('rootRole').value,
+      moreOpen: $('more').open,
+      lastPage: lastPage,
       nodeId: manual ? $('fFrame').value : null,
       page: target,
       createPage: makingNew,
@@ -1042,6 +1134,10 @@
     shelf.innerHTML = '';
     svgshelf.innerHTML = '';
     note.hidden = true;
+    // Replace belongs to one specific payload; a stale one would overwrite the
+    // wrong section with the wrong capture.
+    lastPayload = null;
+    $('replace').hidden = true;
   }
 
   $('run').onclick = function () {
@@ -1056,6 +1152,24 @@
     if (ui.kind === 'update' && !ui.component) {
       statusEl.textContent = 'Pick the component this replaces.'; return;
     }
+
+    /* A section with no page is written correctly and then never built. It was
+       the one unguarded path, and the commonest one — the only signal was a
+       queue warning found long after you had captured five more.
+
+       Blocked only when there is a list to choose from. Capturing with the app
+       closed, or before Fetch from Webflow has run, is legitimate: say what will
+       happen and let it through, because the alternative is a plugin that
+       refuses to work when it cannot see the app. */
+    if (ui.mode === 'manual' && ui.kind === 'section' && !ui.page) {
+      if (conn.state === 'paired' && wPages.length) {
+        statusEl.textContent = 'Pick the Webflow page this section goes on. ' +
+          'A section with no page is saved but never built.';
+        return;
+      }
+      statusEl.textContent = 'No page picked — it will be saved but not built. Capturing…';
+    }
+
     setBusy(true);
     statusEl.textContent = 'Starting…';
     clearOutput();
@@ -1216,20 +1330,50 @@
       if (ui.notes) payload.notes = ui.notes;
     }
 
+    return postSection(payload, msg);
+  }
+
+  /* One place both the first send and Replace go through, so the retry is the
+     same request with one field added rather than a second code path. */
+  async function postSection(payload, msg) {
     statusEl.textContent = 'Sending to ' + conn.project + '…';
+    $('replace').hidden = true;
     try {
       var r = await api('/section', { method: 'POST', body: payload });
+      lastPayload = null;
       statusEl.textContent = (r.replaced ? 'Replaced ' : 'Wrote ') + r.path +
         (r.images.length ? '  +' + r.images.length + ' asset(s)' : '') +
         (r.warning ? '  (' + r.warning + ')' : '');
+      // Remember where it went, so Auto has somewhere to send the next one.
+      if (payload.target && payload.target.page) lastPage = payload.target.page;
       // Notes describe the capture that just went, so they do not carry over to
       // the next one by accident. A batch keeps them until its last section.
-      if (!msg.batch || msg.batch.index === msg.batch.total - 1) $('notes').value = '';
+      if (!msg || !msg.batch || msg.batch.index === msg.batch.total - 1) $('notes').value = '';
       loadQueue();
     } catch (e) {
+      /* The queue refuses a name it already has and tells you to re-send with
+         force — advice that could not be followed from here, because nothing in
+         this panel ever sent it. Recapturing a frame you are iterating on is the
+         commonest thing anyone does with this tool, and it was a wall.
+
+         Not automatic: force overwrites a section.md that may have been edited
+         by hand. One click is the right price. */
+      if (e.status === 409) {
+        lastPayload = payload;
+        statusEl.textContent = payload.name + ' is already in the queue.';
+        $('replace').hidden = false;
+        return;
+      }
       statusEl.textContent = 'Queue refused: ' + e.message + ' — output kept below.';
     }
   }
+
+  $('replace').onclick = function () {
+    if (!lastPayload) return ($('replace').hidden = true);
+    var again = Object.assign({}, lastPayload, { force: true });
+    lastPayload = null;
+    postSection(again, null);
+  };
 
   /* ─────────────────────────────── messages ─────────────────────────────── */
 
@@ -1242,6 +1386,10 @@
     if (msg.type === 'restore') {
       if (msg.opts) {
         if (msg.opts.rootRole) $('rootRole').value = msg.opts.rootRole;
+        // Where an Auto capture goes. There is no page picker outside Manual, so
+        // without this every Auto capture is queued attached to nothing.
+        lastPage = msg.opts.lastPage || null;
+        $('more').open = !!msg.opts.moreOpen;
         setMode(msg.opts.mode || 'manual');
       } else {
         setMode('manual');
@@ -1312,8 +1460,15 @@
     setBusy(false);
 
     if (msg.type === 'error') {
-      out.value = msg.message;
-      statusEl.textContent = 'Error.';
+      /* The cause goes where the eye already is. "Error." with a stack trace in
+         a collapsed box below told nobody anything, least of all that the real
+         message ("that frame no longer exists — pick another") was actionable. */
+      statusEl.textContent = 'Capture failed: ' + msg.message;
+      out.value = msg.detail
+        ? msg.message + '\n\n--- details ---\n' + msg.detail
+        : msg.message;
+      setOutOpen(true);
+      setBusy(false);
       return;
     }
 
