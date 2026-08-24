@@ -231,7 +231,33 @@
 
   /* ── queue ── */
   #queueWrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  #queueWrap.collapsed { flex: none; }
+  #queueWrap.collapsed > #queueBody { display: none; }
+  .qhead { display: flex; gap: var(--s2); align-items: center; flex: none; }
+  /* The scroll that never worked. It has always been declared; it just could not
+     apply while the parent was a <details>. */
   #queueBody { flex: 1 1 auto; overflow-y: auto; min-height: 0; }
+
+  /* Every scrollable area in the panel. Figma's own panels use a thin, quiet
+     scrollbar; the platform default is a solid slab that reads as a UI element
+     in its own right and dominates a 560px-wide panel. Colours come from the
+     Figma theme variables, so it follows dark mode with everything else. */
+  #queueBody, .shelf, .combo-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--bd-2) transparent;
+  }
+  #queueBody::-webkit-scrollbar, .shelf::-webkit-scrollbar, .combo-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  #queueBody::-webkit-scrollbar-track, .shelf::-webkit-scrollbar-track,
+  .combo-list::-webkit-scrollbar-track { background: transparent; }
+  #queueBody::-webkit-scrollbar-thumb, .shelf::-webkit-scrollbar-thumb,
+  .combo-list::-webkit-scrollbar-thumb {
+    background: var(--bd-2); border-radius: 4px;
+    border: 2px solid transparent; background-clip: content-box;
+  }
+  #queueBody::-webkit-scrollbar-thumb:hover, .shelf::-webkit-scrollbar-thumb:hover,
+  .combo-list::-webkit-scrollbar-thumb:hover { background: var(--fg-2); background-clip: content-box; }
   .qpage { font-size: 11px; font-weight: 600; margin: var(--s2) 0 var(--s1); }
   .qrow {
     display: flex; gap: var(--s2); align-items: baseline; font-size: 11px;
@@ -382,13 +408,19 @@
   <div id="shelf" class="shelf"></div>
 </div>
 
-<details id="queueWrap" open>
-  <summary>
-    Queue<span id="qCount" class="right"></span>
+<!-- Not a <details>, for the same reason the Output panel above is not one.
+     Chromium puts a <details>'s non-summary children inside an anonymous slot
+     box, so #queueBody was never a flex child of this container: its
+     `flex: 1 1 auto; min-height: 0` did nothing, it sized to its content, and a
+     long queue overflowed and painted straight over whatever followed it. -->
+<div id="queueWrap">
+  <div class="qhead">
+    <button id="qToggle" class="disc" aria-expanded="true" aria-controls="queueBody">Queue</button>
+    <span id="qCount" class="right"></span>
     <button id="qRefresh" class="link" title="Reload from the project">Refresh</button>
-  </summary>
+  </div>
   <div id="queueBody"><div class="qempty">Nothing queued yet.</div></div>
-</details>
+</div>
 <div class="note" id="note" hidden>
   Nothing is saved automatically — hit <b>Save PNG</b> to download one.
   <code>Download is the only way out: Figma's plugin iframe is denied
@@ -1110,6 +1142,14 @@
       component: comp
     };
   }
+
+  function setQueueOpen(open) {
+    $('queueWrap').classList.toggle('collapsed', !open);
+    $('qToggle').setAttribute('aria-expanded', String(open));
+  }
+  $('qToggle').onclick = function () {
+    setQueueOpen($('queueWrap').classList.contains('collapsed'));
+  };
 
   function setOutOpen(open) {
     $('outWrap').classList.toggle('collapsed', !open);
