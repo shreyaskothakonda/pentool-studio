@@ -63,6 +63,117 @@ const STATE_GLYPH = { done: '✓', building: '◷', pending: '○', error: '✗'
    handful of event types worth showing are handled; the rest of the stream
    (hooks, rate-limit notices, system chatter) is deliberately ignored. */
 
+/* A markdown renderer for the subset the agent actually writes: headings, bold,
+   italic, inline code, fenced blocks, lists, tables, links and rules.
+
+   It exists because the panel used to set textContent, so every reply arrived
+   with its formatting intact as punctuation — tables as pipe soup, `##` in front
+   of every heading, asterisks around anything emphasised. That is most of why
+   the panel read as a wall.
+
+   Escaping first, always. Everything here runs on text produced by a model that
+   is quoting files, shell output and error messages, so the input WILL contain
+   angle brackets. Escape once at the top, then only ever add markup — no path
+   through this function can put unescaped input into innerHTML. */
+function mdEscape(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Inline: applied to already-escaped text. Code spans are extracted first so
+// nothing inside them is treated as emphasis — `**` in a shell command is a glob.
+function mdInline(escaped) {
+  const spans = [];
+  let out = escaped.replace(/`([^`]+)`/g, (m, code) => {
+    spans.push(code);
+    return '\u0000' + (spans.length - 1) + '\u0000';
+  });
+  out = out
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    // Links: the href is rebuilt from a strict pattern rather than passed
+    // through, so javascript: and data: can never reach an anchor.
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+             (m, text, href) => '<a href="' + href + '" target="_blank" rel="noreferrer">' + text + '</a>');
+  return out.replace(/\u0000(\d+)\u0000/g, (m, i) => '<code>' + spans[Number(i)] + '</code>');
+}
+
+function renderMarkdown(src) {
+  const lines = mdEscape(src).split('\n');
+  const out = [];
+  let i = 0;
+
+  const isTableRule = (l) => /^\s*\|?[\s:-]*-[\s:|-]*\|?\s*$/.test(l) && l.indexOf('-') !== -1;
+  const cells = (l) => l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim());
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Fenced code. Taken verbatim — no inline pass, or a shell pipeline becomes
+    // italics.
+    const fence = /^\s*```(\w*)\s*$/.exec(line);
+    if (fence) {
+      const body = [];
+      i++;
+      while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) body.push(lines[i++]);
+      i++;
+      out.push('<pre><code>' + body.join('\n') + '</code></pre>');
+      continue;
+    }
+
+    // Tables. The reason this renderer handles them at all: a build report is
+    // mostly tables, and as plain text they are unreadable.
+    if (line.indexOf('|') !== -1 && i + 1 < lines.length && isTableRule(lines[i + 1])) {
+      const head = cells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].indexOf('|') !== -1 && lines[i].trim()) rows.push(cells(lines[i++]));
+      out.push('<table><thead><tr>' + head.map((c) => '<th>' + mdInline(c) + '</th>').join('') +
+               '</tr></thead><tbody>' +
+               rows.map((r) => '<tr>' + r.map((c) => '<td>' + mdInline(c) + '</td>').join('') + '</tr>').join('') +
+               '</tbody></table>');
+      continue;
+    }
+
+    const h = /^(#{1,6})\s+(.*)$/.exec(line);
+    if (h) {
+      // Capped at h4: these sit inside a panel, not a document, and an h1 the
+      // size of the app title for "1. Snapshot gate fails" reads as chrome.
+      const level = Math.min(h[1].length + 2, 4);
+      out.push('<h' + level + '>' + mdInline(h[2]) + '</h' + level + '>');
+      i++; continue;
+    }
+
+    if (/^\s*(---+|\*\*\*+)\s*$/.test(line)) { out.push('<hr>'); i++; continue; }
+
+    const bullet = /^\s*[-*+]\s+(.*)$/;
+    const number = /^\s*\d+[.)]\s+(.*)$/;
+    if (bullet.test(line) || number.test(line)) {
+      const ordered = !bullet.test(line);
+      const items = [];
+      while (i < lines.length && (bullet.test(lines[i]) || number.test(lines[i]))) {
+        const m = bullet.exec(lines[i]) || number.exec(lines[i]);
+        items.push('<li>' + mdInline(m[1]) + '</li>');
+        i++;
+      }
+      out.push('<' + (ordered ? 'ol' : 'ul') + '>' + items.join('') + '</' + (ordered ? 'ol' : 'ul') + '>');
+      continue;
+    }
+
+    if (!line.trim()) { i++; continue; }
+
+    // A paragraph runs until a blank line or anything that starts a block.
+    const para = [];
+    while (i < lines.length && lines[i].trim() &&
+           !/^\s*```/.test(lines[i]) && !/^#{1,6}\s/.test(lines[i]) &&
+           !bullet.test(lines[i]) && !number.test(lines[i]) &&
+           !/^\s*(---+|\*\*\*+)\s*$/.test(lines[i])) {
+      para.push(lines[i++]);
+    }
+    out.push('<p>' + mdInline(para.join(' ')) + '</p>');
+  }
+  return out.join('');
+}
+
 function msgEl(kind, who) {
   const box = el('div', 'msg ' + kind);
   if (who) box.appendChild(el('span', 'who', who));
@@ -79,8 +190,66 @@ function addMsg(node) {
   if (atEnd) box.scrollTop = box.scrollHeight;
 }
 
+/* Tool calls, made small.
+
+   Every call used to get a full-width row carrying its raw input, so nine
+   exploratory shell commands outweighed the answer they were gathering — and
+   each row was mostly an absolute path whose last fifteen characters were the
+   only part that meant anything.
+
+   Consecutive calls now collapse into one line that counts them and can be
+   opened. A burst of exploration is a footnote until you want it. */
+let toolRun = null;
+
+function toolGist(c) {
+  const inp = c.input || {};
+  if (inp.file_path) return String(inp.file_path).split('/').pop();
+  if (inp.command) {
+    // The first clause is what it is doing; the rest is usually redirection,
+    // chained echoes and a second copy of the same path.
+    const first = String(inp.command).split(/\s*(?:&&|\|\||;|\|)\s*/)[0].trim();
+    return first.length > 48 ? first.slice(0, 47) + '…' : first;
+  }
+  if (inp.pattern) return String(inp.pattern);
+  if (inp.style_name || inp.name) return String(inp.style_name || inp.name);
+  const keys = Object.keys(inp);
+  return keys.length ? keys.join(', ') : '';
+}
+
+function addToolCall(c) {
+  const line = el('div', 'tool-line');
+  line.appendChild(el('span', 'name', c.name));
+  line.appendChild(el('span', 'arg', toolGist(c)));
+
+  // Still in the same burst: add to it rather than starting a new row.
+  if (toolRun && toolRun.box.isConnected && toolRun.box === $('messages').lastElementChild) {
+    toolRun.lines.appendChild(line);
+    toolRun.count++;
+    toolRun.head.textContent = toolRun.count + ' steps';
+    toolRun.box.classList.remove('single');
+    return;
+  }
+
+  const box = msgEl('tool');
+  const head = el('button', 'tool-head', '1 step');
+  const lines = el('div', 'tool-lines');
+  lines.appendChild(line);
+  box.classList.add('single');
+  head.setAttribute('aria-expanded', 'false');
+  head.onclick = () => {
+    const open = box.classList.toggle('open');
+    head.setAttribute('aria-expanded', String(open));
+  };
+  box.appendChild(head);
+  box.appendChild(lines);
+  addMsg(box);
+  toolRun = { box, head, lines, count: 1 };
+}
+
 function renderAgentEvent(e) {
   if (!e || !e.type) return;
+  // Any non-tool event ends the current burst.
+  if (e.type !== 'assistant') toolRun = null;
 
   if (e.type === 'local-user') {
     const m = msgEl('user', 'you');
@@ -92,17 +261,15 @@ function renderAgentEvent(e) {
     for (const c of (e.message && e.message.content) || []) {
       if (c.type === 'text' && c.text.trim()) {
         const m = msgEl('assistant', 'claude');
-        m.appendChild(el('div', 'body', c.text.trim()));
+        const body = el('div', 'body');
+        // Rendered, not printed. See renderMarkdown: input is escaped first and
+        // only markup this file generates is ever added.
+        body.innerHTML = renderMarkdown(c.text.trim());
+        m.appendChild(body);
+        toolRun = null;              // prose ends the burst that preceded it
         addMsg(m);
       } else if (c.type === 'tool_use') {
-        const m = msgEl('tool');
-        m.appendChild(el('span', 'name', c.name));
-        // One line: the whole input is usually far too much to read inline.
-        const inp = c.input || {};
-        const gist = inp.file_path || inp.command || inp.pattern ||
-          inp.style_name || inp.name || Object.keys(inp).join(', ');
-        m.appendChild(el('span', 'arg', String(gist || '')));
-        addMsg(m);
+        addToolCall(c);
       }
     }
     return;

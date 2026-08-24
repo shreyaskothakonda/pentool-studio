@@ -438,12 +438,60 @@ button.icon svg { display: block; }
   background: var(--background3); border-radius: var(--border-radius);
   padding: var(--s2); color: var(--text1);
 }
-.msg.tool {
-  flex-direction: row; align-items: baseline; gap: var(--s2);
-  font-size: var(--font-size-small); color: var(--text2);
+/* A burst of tool calls is a footnote to the answer, not a peer of it. One row
+   that counts them, opening to the detail on click. */
+.msg.tool { display: block; font-size: var(--font-size-small); color: var(--text3); }
+.tool-head {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; color: var(--text3); display: flex; gap: var(--s1); align-items: center;
 }
-.msg.tool .name { color: var(--blueText); flex: none; }
-.msg.tool .arg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-head::before {
+  content: '▸'; font-size: 9px; display: inline-block; transition: transform .12s ease;
+}
+.msg.tool.open .tool-head::before { transform: rotate(90deg); }
+.tool-head:hover { color: var(--text1); }
+.tool-lines { display: none; margin: var(--s1) 0 0 var(--s3); }
+.msg.tool.open .tool-lines { display: block; }
+/* A lone call has nothing to summarise, so it shows itself rather than making
+   you open "1 step" to find out what it was. */
+.msg.tool.single .tool-head { display: none; }
+.msg.tool.single .tool-lines { display: block; margin-left: 0; }
+.tool-line { display: flex; gap: var(--s2); align-items: baseline; }
+.tool-line .name { color: var(--blueText); flex: none; }
+.tool-line .arg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Markdown, inside a panel rather than a document: tight leading, headings only
+   a little larger than the prose, and anything wide scrolls in its own box
+   instead of stretching the pane. */
+.msg .body > *:first-child { margin-top: 0; }
+.msg .body > *:last-child { margin-bottom: 0; }
+.msg .body p { margin: var(--s2) 0; }
+.msg .body h3, .msg .body h4 {
+  margin: var(--s3) 0 var(--s1); font-size: var(--font-size); font-weight: 600; color: var(--text1);
+}
+.msg .body h4 { font-size: var(--font-size-small); color: var(--text2); }
+.msg .body ul, .msg .body ol { margin: var(--s2) 0; padding-left: var(--s4); }
+.msg .body li { margin: 2px 0; }
+.msg .body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+  background: var(--backgroundInput); padding: 1px 4px; border-radius: var(--radius-sm);
+}
+.msg .body pre {
+  margin: var(--s2) 0; padding: var(--s2); overflow-x: auto;
+  background: var(--backgroundInput); border-radius: var(--radius-sm);
+}
+.msg .body pre code { background: none; padding: 0; }
+.msg .body table {
+  border-collapse: collapse; margin: var(--s2) 0; font-size: var(--font-size-small);
+  display: block; overflow-x: auto; max-width: 100%;
+}
+.msg .body th, .msg .body td {
+  border: 1px solid var(--line); padding: var(--s1) var(--s2); text-align: left; vertical-align: top;
+}
+.msg .body th { color: var(--text1); font-weight: 600; background: var(--background3); }
+.msg .body hr { border: 0; border-top: 1px solid var(--line); margin: var(--s3) 0; }
+.msg .body a { color: var(--blueText); }
+.msg .body strong { color: var(--text1); font-weight: 600; }
 .msg.result {
   font-size: var(--font-size-small); color: var(--text3);
   border-top: 1px solid var(--line); padding-top: var(--s2);
