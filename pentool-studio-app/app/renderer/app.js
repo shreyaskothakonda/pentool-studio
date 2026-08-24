@@ -76,7 +76,22 @@ const STATE_GLYPH = { done: '✓', building: '◷', pending: '○', error: '✗'
    angle brackets. Escape once at the top, then only ever add markup — no path
    through this function can put unescaped input into innerHTML. */
 function mdEscape(t) {
-  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // Quotes too. Only one thing here builds an attribute — the link href — but
+    // escaping them at the source means no future addition can put text into an
+    // attribute and break out of it. As element content these render back as
+    // ordinary quotes, so nothing is lost.
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* Belt and braces for anything going into an attribute value. mdEscape has
+   normally handled these already; this is the layer that does not depend on
+   that having happened. */
+function attrEscape(t) {
+  return String(t).replace(/&(?!#?\w+;)/g, '&amp;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // Inline: applied to already-escaped text. Code spans are extracted first so
@@ -90,10 +105,24 @@ function mdInline(escaped) {
   out = out
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
-    // Links: the href is rebuilt from a strict pattern rather than passed
-    // through, so javascript: and data: can never reach an anchor.
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-             (m, text, href) => '<a href="' + href + '" target="_blank" rel="noreferrer">' + text + '</a>');
+    /* Links. The scheme is pinned to http(s) so javascript: and data: can never
+       reach an anchor — but that alone was not enough, and this got it wrong
+       once: the character class allowed a double quote, so a URL could close the
+       href attribute early and open an event handler after it
+       (`[x](https://a/"onmouseover="…)`). A breakout here is not cosmetic; this
+       renderer holds the IPC bridge, and the text being rendered is a model
+       quoting files and web pages.
+
+       Three things stop it now, any one of which would do: quotes are escaped
+       upstream in mdEscape, the pattern refuses them and angle brackets outright,
+       and the href is attribute-escaped again on the way in. */
+    /* \u0000 is the code-span placeholder. Without excluding it a URL could
+       swallow one, and the restore pass afterwards would put <code> markup
+       inside the href attribute. Harmless as a quoted value, but markup has no
+       business in an attribute and it would not stay harmless. */
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)"'`<>\u0000]+)\)/g,
+             (m, text, href) => '<a href="' + attrEscape(href) +
+                                '" target="_blank" rel="noreferrer">' + text + '</a>');
   return out.replace(/\u0000(\d+)\u0000/g, (m, i) => '<code>' + spans[Number(i)] + '</code>');
 }
 

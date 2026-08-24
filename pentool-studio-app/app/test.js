@@ -1,5 +1,7 @@
 // Zero-dependency test runner for the app layer. `node test.js`
 const http = require('http');
+const fs = require('fs');
+const pathm = require('path');
 const { pickRelease, compareVersions } = require('./update');
 
 let pass = 0, fail = 0;
@@ -34,6 +36,56 @@ check('four fields',            compareVersions('1.0.0.2', '1.0.0.1'), 1);
 check('junk field sorts as 0',  compareVersions('1.x.0', '1.0.0'),  0);
 check('empty is not newer',     compareVersions('', '0.1.0'),      -1);
 check('null is not newer',      compareVersions(null, '0.1.0'),    -1);
+
+/* ─────────────────── markdown: rendering agent output ───────────────────
+   The panel renders what a model wrote while quoting files, shell output and
+   web pages, into a window that holds the IPC bridge. Every case here is a way
+   that text could stop being text. */
+section('markdown — agent output cannot become markup');
+{
+  // The renderer lives in the browser half, so it is loaded the way the page
+  // loads it: source between its two markers, evaluated on its own.
+  const src = fs.readFileSync(pathm.join(__dirname, 'renderer', 'app.js'), 'utf8');
+  const slice = src.slice(src.indexOf('function mdEscape'), src.indexOf('function msgEl'));
+  const md = {};
+  new Function('exports', slice + '\nexports.renderMarkdown = renderMarkdown;')(md);
+  const R = md.renderMarkdown;
+
+  const hasLiveTag = (html, tag) => new RegExp('<' + tag + '[\\s>]', 'i').test(html);
+
+  check('script tags are inert', hasLiveTag(R('<script>alert(1)</script>'), 'script'), false);
+  check('img onerror is inert',  hasLiveTag(R('<img src=x onerror=alert(1)>'), 'img'), false);
+  check('and shown as text',     /&lt;script&gt;/.test(R('<script>x</script>')), true);
+
+  /* The one that was real. The href character class allowed a double quote, so
+     a URL closed the attribute early and opened an event handler after it. */
+  const broke = R('[x](https://a.com/"onmouseover="alert1")');
+  check('a quote cannot close the href', /onmouseover="/.test(broke), false);
+  check('it is encoded instead', /&quot;onmouseover/.test(broke), true);
+  check('single quotes too',
+    /onmouseover=&#39;/.test(R("[x](https://a.com/'onmouseover='alert1')")), true);
+
+  // Only http(s) reaches an anchor.
+  check('javascript: is not a link', /<a /.test(R('[x](javascript:alert(1))')), false);
+  check('data: is not a link', /<a /.test(R('[x](data:text/html,<script>alert(1)</script>)')), false);
+
+  // Nothing may put markup inside an attribute, by any route.
+  const attrs = R('[a](https://a.com/`c`) [b](https://b.com/<i>) [c](https://c.com/"q")');
+  check('no markup ever lands inside an href', /href="[^"]*[<>]/.test(attrs), false);
+
+  // ...while ordinary links still work.
+  const ok = R('see [the release](https://github.com/x/y?a=1&b=2)');
+  check('a real link is still a link', /<a href="https:\/\/github.com\/x\/y\?a=1&amp;b=2"/.test(ok), true);
+  check('with noreferrer', /rel="noreferrer"/.test(ok), true);
+
+  // Formatting the panel exists to render.
+  check('tables become tables', /<table>.*<th>Page<\/th>/.test(R('| Page |\n|---|\n| a |')), true);
+  check('fences become blocks', /<pre><code>/.test(R('```\nls -la\n```')), true);
+  check('html inside a fence is escaped', /&lt;div&gt;/.test(R('```\n<div>\n```')), true);
+  check('headings are demoted, not h1', /<h[34]>/.test(R('# Title')), true);
+  check('a glob in code is not emphasis', /<code>ls \*\*\/\*.md<\/code>/.test(R('run `ls **/*.md`')), true);
+  check('bold is bold', /<strong>x<\/strong>/.test(R('**x**')), true);
+}
 
 /* ────────────────────────── pickRelease ────────────────────────── */
 section('update — choosing a release');
