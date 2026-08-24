@@ -11,6 +11,7 @@ const on = (channel) => (cb) => {
 contextBridge.exposeInMainWorld('pentool', {
   getQueue:      () => ipcRenderer.invoke('queue:get'),
   snapshotStatus:() => ipcRenderer.invoke('snapshot:status'),
+  backupStatus:  () => ipcRenderer.invoke('backup:status'),
   getBridge:     () => ipcRenderer.invoke('bridge:get'),
   copyToken:     () => ipcRenderer.invoke('bridge:copyToken'),
   openSection:   (dir, file) => ipcRenderer.invoke('section:open', dir, file),
@@ -53,6 +54,7 @@ contextBridge.exposeInMainWorld('pentool', {
   openUpdate:    (u) => ipcRenderer.invoke('update:open', u),
 
   onUpdate:      on('update'),
+  onAttention:   on('attention'),
   onQueue:       on('queue'),
   onProject:     on('project'),
   onProjects:    on('projects'),

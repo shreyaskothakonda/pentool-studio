@@ -122,6 +122,7 @@ function createProject(opts) {
         'Bash(node bin/wf-state.js:*)',
         'Bash(node bin/wf-asset.js:*)',
         'Bash(node bin/wf-snapshot.js:*)',
+        'Bash(node bin/wf-backup.js:*)',
         'Bash(node bin/wf-styleguide.js:*)',
         'Bash(node bin/wf-unbuild.js:*)',
         'Read(queue/**)'

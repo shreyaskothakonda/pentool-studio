@@ -1,11 +1,13 @@
 ---
 name: webflow-snapshot
-description: Record a structural snapshot of the Webflow site before any build, and prompt for a Designer restore point. Use at the start of every session, or when the user asks to snapshot, back up, or record the current state of the site before making changes.
+description: Record a structural snapshot of the Webflow site — pages, styles, components and element trees — so a later change can be diffed against it. Use only when the user explicitly asks for a snapshot. It is not a backup and cannot restore anything; for that, use webflow-backup.
 ---
 
 # Webflow snapshot
 
-Records what the site looks like **now**, so a build's effects are diffable and a mistake is recoverable.
+Records what the site looks like **now**, so a build's effects can be diffed
+afterwards. It cannot undo them — see `/webflow-backup` for the only thing that
+can.
 
 ## Read this before claiming anything is backed up
 
@@ -22,18 +24,6 @@ So this skill produces two different things, and they are not interchangeable:
 
 Never describe the snapshot as a backup. If someone loses work believing this
 skill protected them, that is the failure.
-
-## 1. Ask for the restore point first
-
-Before capturing anything, tell the user plainly:
-
-> Before I build, create a restore point in Webflow: open the Designer →
-> Settings → Backups → **Create backup**. That is the only thing that can undo a
-> bad build. Say **done** when it exists, or **skip** to proceed without one.
-
-Record their answer — it goes into the manifest as `restorePointConfirmed`. If
-they skip, capture the snapshot anyway and say clearly in the summary that there
-is no recoverable backup for this session.
 
 ## 2. Capture
 
@@ -64,23 +54,23 @@ Then seal it:
 ```js
 snap.finishSnapshot(ROOT, s, {
   captured: { pages: 12, styles: 340, components: 18 },
-  restorePointConfirmed: true,     // whatever the user actually said
   notes: 'pre-build for /markets'
 });
 ```
 
 ## 3. Report
 
-State what was captured, where it is, and — unambiguously — whether a
-restorable backup exists:
+State what was captured and where it is. Say what it is for — comparing later —
+and do not let it be mistaken for a way back:
 
 ```text
 snapshot  snapshots/2026-08-19T21-14-02-113Z/
 captured  12 pages · 340 styles · 18 components · 2 element trees
-restore   ✓ Webflow restore point confirmed by the user
-          (or)
-restore   ✗ NO restore point — this session has no way back
+note      a record to diff against, not a backup — only a Webflow
+          restore point can undo a build
 ```
+
+Whether a restore point exists is `/webflow-backup`'s question, not this one's.
 
 ## Diffing later
 

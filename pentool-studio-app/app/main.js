@@ -172,20 +172,40 @@ ipcMain.handle('mcp:copyAdd', () => { clipboard.writeText(mcpStatus().add); retu
 function syncTooling(root) {
   const from = templateRoot();
   const copied = [];
+
+  const copyIfChanged = (a, b, label) => {
+    try {
+      if (fs.existsSync(b) && fs.readFileSync(a, 'utf8') === fs.readFileSync(b, 'utf8')) return;
+      fs.mkdirSync(path.dirname(b), { recursive: true });
+      fs.copyFileSync(a, b);
+      copied.push(label);
+    } catch (e) { /* read-only project — it still runs on what it has */ }
+  };
+
   for (const dir of ['lib', 'bin']) {
     const src = path.join(from, dir);
     if (!fs.existsSync(src)) continue;
     for (const f of fs.readdirSync(src)) {
       if (!f.endsWith('.js')) continue;
-      const a = path.join(src, f), b = path.join(root, dir, f);
-      try {
-        if (fs.existsSync(b) && fs.readFileSync(a, 'utf8') === fs.readFileSync(b, 'utf8')) continue;
-        fs.mkdirSync(path.dirname(b), { recursive: true });
-        fs.copyFileSync(a, b);
-        copied.push(dir + '/' + f);
-      } catch (e) { /* read-only project — it still runs on what it has */ }
+      copyIfChanged(path.join(src, f), path.join(root, dir, f), dir + '/' + f);
     }
   }
+
+  /* Skills too. They were copied once at project creation and never again, so a
+     project made last week could not run a skill added since — the agent simply
+     answers "Unknown command" and the reason is invisible. A skill is a prompt
+     in a markdown file; there is no more risk in refreshing it than in
+     refreshing lib/. */
+  const skillsSrc = path.join(from, '.claude', 'skills');
+  if (fs.existsSync(skillsSrc)) {
+    for (const name of fs.readdirSync(skillsSrc)) {
+      const file = path.join(skillsSrc, name, 'SKILL.md');
+      if (!fs.existsSync(file)) continue;
+      copyIfChanged(file, path.join(root, '.claude', 'skills', name, 'SKILL.md'),
+                    '.claude/skills/' + name);
+    }
+  }
+
   return copied;
 }
 
@@ -197,6 +217,7 @@ let reorderSections = null;
 let setBuildMode = null;
 
 let snapshotLib = null;
+let backupLib = null;
 
 function loadPipeline(root) {
   ROOT = root;
@@ -208,6 +229,8 @@ function loadPipeline(root) {
   setBuildMode = edit.setBuildMode;
   try { snapshotLib = require(path.join(ROOT, 'lib', 'snapshot')); }
   catch (e) { snapshotLib = null; }   // older project without the snapshot lib
+  try { backupLib = require(path.join(ROOT, 'lib', 'backup')); }
+  catch (e) { backupLib = null; }     // older project, before the backup gate
 }
 
 let win = null;
@@ -389,10 +412,6 @@ function startStream() {
     send('pty-status', ptyStatus);
   });
 
-  if (snapshotLib) {
-    try { snapshotLib.startSession(ROOT, { host: 'pentool', startedBy: 'stream' }); }
-    catch (e) { /* non-fatal — the gate falls back to an age window */ }
-  }
 }
 
 /* A GUI-launched app inherits almost nothing: LaunchServices hands it a bare
@@ -440,6 +459,43 @@ function exitReason(code) {
 function startAgent() {
   if (agentMode === 'messages') startStream();
   else startPty();
+  askForBackup();
+}
+
+/* The one question that stands between a bad build and lost work.
+
+   Webflow has no undo API. Nothing here can make a backup or check for one — a
+   restore point is a human in the Designer — so the only protection available is
+   asking, every session, and refusing to build until there is an answer.
+
+   Sent through the agent rather than shown as a dialog because the answer is a
+   conversation: "done", "skip", "what do you mean". A modal box cannot take
+   those. It goes through whichever way the agent is running — the old version
+   typed into the pty and therefore never asked at all in Messages mode. */
+function askForBackup() {
+  if (!ROOT || !backupLib) return;
+  if (config().autoBackup === false) return;
+
+  let st;
+  try { st = backupLib.backupStatus(ROOT); }
+  catch (e) { return; }              // unreadable session file; the gate still refuses
+  if (st.answered) return;           // already asked this session
+
+  // Let the agent finish starting before talking to it.
+  setTimeout(() => {
+    if (agentMode === 'messages') {
+      if (!stream) return;
+      stream.stdin.write(JSON.stringify({
+        type: 'user',
+        message: { role: 'user', content: [{ type: 'text', text: '/webflow-backup' }] }
+      }) + '\n');
+      send('agent-event', { type: 'local-user', text: '/webflow-backup' });
+    } else if (term) {
+      term.write('/webflow-backup\r');
+    }
+    // The question is worthless in a drawer nobody opens.
+    send('attention', { reason: 'backup' });
+  }, 3500);
 }
 
 function stopAgent() {
@@ -504,21 +560,6 @@ function startPty() {
   send('pty-status', ptyStatus);
   send('agent-reset', { mode: 'terminal' });
 
-  // A new agent session owes a snapshot before it touches Webflow. Record the
-  // session boundary so the gate in wf-snapshot.js can tell "before" from "now",
-  // then ask the agent to take one. Webflow has no undo.
-  if (snapshotLib) {
-    try { snapshotLib.startSession(ROOT, { host: 'pentool', startedBy: 'pty' }); }
-    catch (e) { /* non-fatal — the gate falls back to an age window */ }
-  }
-  const cfg = config();
-  if (cfg.autoSnapshot !== false) {
-    // Let the TUI finish drawing before typing into it.
-    setTimeout(() => {
-      if (term) term.write('/webflow-snapshot\r');
-      send('bridge-write', { ok: true, section: 'session snapshot requested', images: [] });
-    }, 3500);
-  }
 
   term.onData((d) => send('pty-data', d));
   term.onExit(({ exitCode }) => {
@@ -587,6 +628,16 @@ function createWindow() {
 /* ────────────────────────────────── IPC ──────────────────────────────── */
 
 ipcMain.handle('queue:get', () => snapshot());
+ipcMain.handle('backup:status', () => {
+  if (!ROOT) return { answered: false, noProject: true };
+  if (!backupLib) {
+    // An older project without lib/backup.js. Not knowing must not read as fine.
+    return { answered: false, unknown: true, reason: 'this project has no lib/backup.js — reopen it in Pentool to update its tooling' };
+  }
+  try { return backupLib.backupStatus(ROOT); }
+  catch (e) { return { answered: false, reason: e.message }; }
+});
+
 ipcMain.handle('snapshot:status', () => {
   // Must match the shape the header reads. Returning {owed, note} left `required`
   // undefined, so with no project open the header claimed a snapshot existed.
@@ -956,6 +1007,15 @@ async function activateNow(root) {
   activeName = config().projectName || path.basename(root);
   rememberRoot(root);
   try { projectLib().registerProject(REGISTRY(), root, activeName); } catch (e) { /* registry is a convenience */ }
+
+  /* A session is a project being opened, not an agent being started. Tying it to
+     the agent meant restarting a crashed agent re-asked a question answered two
+     minutes earlier — which is how a safety prompt becomes something people
+     click through without reading. */
+  if (backupLib) {
+    try { backupLib.startSession(root, { host: 'pentool', startedBy: 'open' }); }
+    catch (e) { /* non-fatal; the gate refuses on its own if this never wrote */ }
+  }
 
   send('project', { ok: true, root, name: activeName, synced, mcp: mcpStatus() });
   await startBridge();

@@ -82,20 +82,26 @@ So there are two different artifacts, and they are not interchangeable:
 | **Snapshot** (`/webflow-snapshot`) | JSON record of pages, styles, components, element trees | **No.** Diff and reference only |
 | **Restore point** (you, in the Designer) | Webflow's own backup | **Yes** |
 
-Every agent session owes a snapshot before it builds. The gate is hard:
+**The gate is the backup, not the snapshot.** A snapshot cannot restore
+anything, so gating on one meant the gate was satisfied by something that could
+not save you. What blocks a build now is whether this session has answered the
+restore-point question:
 
 ```sh
-node bin/wf-snapshot.js status   # exit 1 while this session still owes one
-node bin/wf-snapshot.js list
+node bin/wf-backup.js status     # exit 1 until this session has answered
+node bin/wf-backup.js confirm    # a restore point exists
+node bin/wf-backup.js skip       # build without one, knowingly
 ```
 
-`webflow-build` refuses to start when that exits non-zero. Pentool records the
-session boundary when the agent starts and asks it to snapshot automatically —
-set `"autoSnapshot": false` in `_config.json` to stop that.
+Opening a project starts a session and asks Claude to put the question to you —
+in the Messages panel, or the terminal, depending on how the agent is running.
+Skipping is allowed and recorded; what is not allowed is drifting past the
+question. Set `"autoBackup": false` in `_config.json` to stop the asking, and
+the gate still refuses until something answers it.
 
-The snapshot skill also asks you to create a real Webflow restore point and
-records whether you confirmed it. If you skipped, the header and the CLI both say
-**no restore point** rather than implying you are covered.
+Snapshots remain, as `/webflow-snapshot`, for when you want a structural diff
+before a risky change. They no longer run automatically and no longer gate
+anything.
 
 ## Projects
 
@@ -224,7 +230,8 @@ Errors exit non-zero and block the build. Warnings do not.
 | `lib/snapshot.js` | session gating and structural snapshots |
 | `lib/project.js` | project scaffolding and the registry |
 | `lib/webflow.js` | Data API client — page and component listing, for the app's pickers |
-| `bin/wf-snapshot.js` | the snapshot gate: `status`, `list`, `session` |
+| `bin/wf-backup.js` | the build gate: `status`, `confirm`, `skip` — did this session confirm a Webflow restore point |
+| `bin/wf-snapshot.js` | structural snapshots, opt-in: `status`, `list`, `session` |
 | `bin/wf-styleguide.js` | the site's real class inventory — `set --known-file`, `set --built`, `show` |
 | `bin/wf-unbuild.js` | put a finished section back in the queue: `<section> [page]`, `--dry-run` |
 | `lib/unbuild.js` | what that does — moves `_done/` back, forgets the build, archives the log |

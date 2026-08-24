@@ -48,19 +48,19 @@ update this file.
 
 ## 1. Preflight — once per session
 
-**Snapshot gate, before anything else.** No build starts without a snapshot for
-this session:
+**Backup gate, before anything else.** No build starts until this session has
+answered the restore-point question:
 
 ```bash
-node bin/wf-snapshot.js status     # exit 1 means a snapshot is required
+node bin/wf-backup.js status     # exit 1 means it has not been asked yet
 ```
 
-If it exits non-zero, **stop and run `/webflow-snapshot`**, then come back.
-Webflow has no undo API, so the record of what the site looked like beforehand is
-the only way to see — or reverse by hand — what a bad build did.
+If it exits non-zero, **stop and run `/webflow-backup`**, then come back. Webflow
+has no undo API, and a restore point made in the Designer is the only thing that
+can put the site back.
 
-If the snapshot exists but `restorePointConfirmed` is false, say so before
-building: there is a diffable record but **nothing that can actually restore**.
+If it reports `skipped`, build — but say once, before you start, that this
+session has no way back and anything written will have to be undone by hand.
 
 ```bash
 node bin/wf-queue.js plan          # resolved order + validation; exit 1 on error
@@ -334,7 +334,9 @@ Stop immediately. Do not continue to the next section.
 
 ## Never
 
-- Build without a snapshot for this session.
+- Build before this session has answered the restore-point question.
+- Answer that question on the user's behalf, or carry an answer over from an
+  earlier session.
 - Describe a snapshot as a backup. It cannot restore anything.
 - Build a section that `wf-queue.js` flagged as an error.
 - Build when a required MCP tool is missing — stop and name it.

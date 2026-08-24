@@ -813,6 +813,80 @@ section('bridge — writeSection');
   }
 }
 
+section('backup — the gate that replaced the snapshot');
+{
+  const b = require('./lib/backup');
+  const sess = (root) => pathm.join(root, 'queue', '_session.json');
+
+  {
+    const root = fixture({ 'queue/_config.json': CONFIG });
+
+    // No session at all. Must not read as answered.
+    check('before any session, unanswered', b.backupStatus(root).answered, false);
+
+    b.startSession(root, { host: 'test' });
+    check('a fresh session is unanswered', b.backupStatus(root).answered, false);
+    check('and says why', /has not confirmed/.test(b.backupStatus(root).reason), true);
+
+    b.record(root, 'confirmed');
+    let st = b.backupStatus(root);
+    check('confirmed is answered', st.answered, true);
+    check('and remembers which answer', st.answer, 'confirmed');
+    check('and when', typeof st.at === 'string' && st.at.length > 0, true);
+
+    // A new session forgets it. A backup from an hour ago is not a backup for
+    // this build, which is the entire point of scoping it to a session.
+    b.startSession(root, { host: 'test' });
+    check('a new session must be asked again', b.backupStatus(root).answered, false);
+
+    b.record(root, 'skipped', 'in a hurry');
+    st = b.backupStatus(root);
+    check('skipped is answered too', st.answered, true);
+    check('but distinguishable', st.answer, 'skipped');
+    check('and keeps the reason', st.note, 'in a hurry');
+
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    const root = fixture({ 'queue/_config.json': CONFIG });
+    b.startSession(root, { host: 'test' });
+    throws('an invented answer is refused', () => b.record(root, 'probably'), /must be one of/);
+    throws('and so is nothing', () => b.record(root, ''), /must be one of/);
+    check('and none of it counted', b.backupStatus(root).answered, false);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // The failure that matters: an unreadable session file must never read as
+    // answered, because that would let a build start with no way back.
+    const root = fixture({ 'queue/_config.json': CONFIG, 'queue/_session.json': '{ not json' });
+    throws('a corrupt session file is refused, not ignored',
+      () => b.backupStatus(root), /not valid JSON/);
+    throws('and cannot be recorded into', () => b.record(root, 'confirmed'), /not valid JSON/);
+    check('and it is left exactly as it was',
+      fs.readFileSync(sess(root), 'utf8'), '{ not json');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    // Recording must not lose what else the session carries.
+    const root = fixture({ 'queue/_config.json': CONFIG });
+    b.startSession(root, { host: 'pentool', startedBy: 'open' });
+    b.record(root, 'confirmed');
+    const raw = JSON.parse(fs.readFileSync(sess(root), 'utf8'));
+    check('the session survives the answer', raw.host, 'pentool');
+    check('including how it started', raw.startedBy, 'open');
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+
+  {
+    const root = fixture({ 'queue/_config.json': CONFIG });
+    throws('recording without a session is refused', () => b.record(root, 'confirmed'), /no session/);
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 section('unbuild — putting a finished section back');
 {
   const { unbuild } = require('./lib/unbuild');

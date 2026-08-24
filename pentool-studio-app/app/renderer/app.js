@@ -856,43 +856,49 @@ window.addEventListener('resize', refit);
 
 /* ────────────────────────────── startup ─────────────────────────────── */
 
-async function refreshSnapshot() {
-  const st = await window.pentool.snapshotStatus();
+/* The header's one safety light. It used to report whether a *snapshot* existed —
+   a JSON record that cannot restore anything — which meant it could read ✓ while
+   the site had no way back at all. It reports the only thing that matters now:
+   has this session confirmed a Webflow restore point. */
+async function refreshBackup() {
+  const st = await window.pentool.backupStatus();
   const tag = $('snapTag');
-  // With no project there is nothing to have snapshotted, and the fall-through
-  // branch used to claim "snapshot ✓".
-  if (st.noProject) {
-    tag.textContent = '';
-    tag.className = 'tag';
-    tag.title = '';
-    return;
-  }
-  // Cannot tell. Distinct from "none taken" so the reason is not misread as a
-  // finding, but still `bad`, because proceeding on an unknown is the risk.
-  if (st.unknown) {
-    tag.textContent = 'snapshot ?';
-    tag.className = 'tag bad';
-    tag.title = st.reason;
-    return;
-  }
-  if (st.required) {
-    tag.textContent = 'no snapshot';
-    tag.className = 'tag bad';
-    tag.title = st.reason + ' — run /webflow-snapshot before building';
-  } else if (st.newest && !st.newest.meta.restorePointConfirmed) {
-    tag.textContent = 'snapshot · no restore point';
-    tag.className = 'tag';
-    tag.title = 'A diffable record exists, but nothing can restore the site.';
-  } else {
-    tag.textContent = 'snapshot ✓';
-    tag.className = 'tag';
-    tag.title = st.newest ? 'taken ' + st.newest.meta.takenAt : '';
-  }
-}
-setInterval(refreshSnapshot, 5000);
-refreshSnapshot();
 
-window.pentool.onQueue((s) => { render(s); refreshSnapshot(); });
+  if (st.noProject) { tag.textContent = ''; tag.className = 'tag'; tag.title = ''; return; }
+
+  if (!st.answered) {
+    tag.textContent = 'backup?';
+    tag.className = 'tag bad';
+    tag.title = (st.reason || 'this session has not confirmed a Webflow backup') +
+                ' — run /webflow-backup before building';
+    return;
+  }
+  if (st.answer === 'skipped') {
+    tag.textContent = 'no backup';
+    tag.className = 'tag bad';
+    tag.title = 'You chose to build without a restore point. Anything written must be undone by hand.';
+    return;
+  }
+  tag.textContent = 'backup ✓';
+  tag.className = 'tag';
+  tag.title = 'A Webflow restore point was confirmed for this session' +
+              (st.at ? ', ' + st.at : '') + '. Restore it in the Designer if a build goes wrong.';
+}
+setInterval(refreshBackup, 5000);
+refreshBackup();
+
+/* A question in a collapsed drawer is not a question. When the agent is asked to
+   raise the backup prompt, put the panel that shows it in front of the user. */
+window.pentool.onAttention((a) => {
+  if (!a || a.reason !== 'backup') return;
+  // Messages mode renders the agent's question in the panel; terminal mode has
+  // it inside the drawer, which is collapsed by default.
+  if (window.__agentMode === 'messages') setView('messages');
+  else openDrawer();
+  note('Claude is asking about a Webflow backup before this session builds anything.', 'warn');
+});
+
+window.pentool.onQueue((s) => { render(s); refreshBackup(); });
 window.pentool.onProject(renderProject);
 window.pentool.onProjects(renderProjects);
 window.pentool.getQueue().then(render);
